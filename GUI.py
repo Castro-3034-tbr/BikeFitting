@@ -1,9 +1,14 @@
 import sys
 import numpy as np
-from PyQt5.QtWidgets import QApplication, QMainWindow, QWidget, QHBoxLayout, QTableWidget, QTableWidgetItem
+from PyQt5.QtWidgets import (
+    QApplication, QMainWindow, QWidget, QHBoxLayout, QVBoxLayout,
+    QTableWidget, QTableWidgetItem, QMessageBox
+)
 from PyQt5.QtCore import QTimer
 import pyqtgraph.opengl as gl
-from PyQt5.QtWidgets import QHeaderView
+from PyQt5.QtWidgets import QHeaderView, QAction, QActionGroup, QMenu
+from PyQt5.QtMultimedia import QCameraInfo
+
 
 class BiomecanicaUI(QMainWindow):
     def __init__(self):
@@ -11,15 +16,86 @@ class BiomecanicaUI(QMainWindow):
         self.setWindowTitle("Análisis Biomecánico 3D")
         self.setGeometry(100, 100, 1800, 900)
 
+        # --- Barra de menu ---
+        menubar = self.menuBar()
+        file_menu = menubar.addMenu("Archivo")
+        visualization_menu = menubar.addMenu("Visualización")
+        config_menu = menubar.addMenu("Configuración")
+        help_menu = menubar.addMenu("Ayuda")
+
+        #Exportar datos
+        export_action = QAction("Exportar Datos", self)
+        file_menu.addAction(export_action)
+
+        # Seleccion de vista
+        visualization_group = QActionGroup(self)
+        visualization_group.setExclusive(True)
+        view_2d_action = QAction("Vista Imagen", self, checkable=True, checked=True)
+        view_3d_action = QAction("Vista 3D", self, checkable=True)
+        visualization_group.addAction(view_2d_action)
+        visualization_group.addAction(view_3d_action)
+        visualization_menu.addAction(view_2d_action)
+        visualization_menu.addAction(view_3d_action)
+
+        #TODO: Implementar la acciones de cambio de vista
+        # view_2d_action.triggered.connect(self.show_2d_view)
+        # view_3d_action.triggered.connect(self.show_3d_view)
+
+        #Menu de configuracion
+        self.list_cam = ["Cam 1", "Cam 2", "Cam 3", "Cam 4"]
+        # self.ObtainCamAvailable() TODO:
+
+        #Visualizar camaras disponibles
+        cam_menu = QMenu("Cámaras Disponibles", self)
+        for cam in self.list_cam:
+            action = QAction(cam, self)
+            cam_menu.addAction(action)
+
+        config_menu.addMenu(cam_menu)
+
+        #Paguina de configuracion de vista
+        cam_vista = {
+            "Vista Derecha":"",
+            "Vista Izquierda":"",
+            "vista Trasera":"",
+            "Vista Frontal":"",
+        }
+        conf_cam_menu = QAction("Configuración de Cámaras", self)
+        #conf_cam_menu.triggered.connect(self.MenuConfigCam) TODO: Implementar la pagina de configuracion de camaras
+        config_menu.addAction(conf_cam_menu)
+
+        # Acción salir
+        exit_action = QAction("Salir", self)
+        exit_action.triggered.connect(self.close)
+        file_menu.addAction(exit_action)
+
+        # Repo
+        repo_action = QAction("Repositorio", self)
+        repo_action.triggered.connect(lambda: QMessageBox.information(self, "Repositorio",
+                                                                        "Visita nuestro repositorio en GitHub:\n\n"
+                                                                        "https://github.com/tu-repo"))
+        help_menu.addAction(repo_action)
+
+        # Acción acerca de
+        about_action = QAction("Acerca de...", self)
+        about_action.triggered.connect(lambda: QMessageBox.information(self, "Acerca de",
+                                                                        "Aplicación de Bikefitting basada en visión artificial.\n\n"
+                                                                        "Desarrollada por: Castro-3034-tbr\n\n"
+                                                                        "Versión 1.0\n\n"))
+        help_menu.addAction(about_action)
+
+        # --- Panel principal ---
         main_widget = QWidget()
         main_layout = QHBoxLayout()
 
+        # Panel 3D
         self.view3D = gl.GLViewWidget()
         self.view3D.setCameraPosition(distance=300)
         self.view3D.setBackgroundColor('w')
         main_layout.addWidget(self.view3D, stretch=3)
         self.view3D.setMinimumWidth(500)
 
+        # Tabla
         self.table = QTableWidget()
         self.table.setColumnCount(4)
         self.table.setHorizontalHeaderLabels(["Articulación", "Ángulo (°)", "Máximo (°)", "Mínimo (°)"])
@@ -65,6 +141,16 @@ class BiomecanicaUI(QMainWindow):
         main_widget.setLayout(main_layout)
         self.setCentralWidget(main_widget)
 
+    def ObtainCamAvailable(self):
+        """Obtener las cámaras disponibles y agregarlas al menú de configuración."""
+
+        #Obtenemos las cámaras disponibles
+        cameras = QCameraInfo.availableCameras()
+        self.list_cam = [cam.description() for cam in cameras]
+        if not self.list_cam:
+            self.list_cam.append("No hay cámaras disponibles")
+            return
+
     def update_angles(self, angles):
         for joint, angle in angles.items():
             actual = angle
@@ -100,7 +186,6 @@ if __name__ == "__main__":
     window.show()
 
     timer = QTimer()
-    # Conectamos un lambda que llame a la función con ventana como parámetro
     timer.timeout.connect(lambda: update_test_angles(window))
     timer.start(1000)
 
