@@ -2,12 +2,13 @@ import sys
 import numpy as np
 from PyQt5.QtWidgets import (
     QApplication, QMainWindow, QWidget, QHBoxLayout, QVBoxLayout,
-    QTableWidget, QTableWidgetItem, QMessageBox
+    QTableWidget, QTableWidgetItem, QMessageBox, QPushButton
 )
 from PyQt5.QtCore import QTimer
 import pyqtgraph.opengl as gl
 from PyQt5.QtWidgets import QHeaderView, QAction, QActionGroup, QMenu
 from PyQt5.QtMultimedia import QCameraInfo
+from PyQt5.QtGui import QPalette, QColor
 
 
 class BiomecanicaUI(QMainWindow):
@@ -88,12 +89,20 @@ class BiomecanicaUI(QMainWindow):
         main_widget = QWidget()
         main_layout = QHBoxLayout()
 
-        # Panel 3D
-        self.view3D = gl.GLViewWidget()
-        self.view3D.setCameraPosition(distance=300)
-        self.view3D.setBackgroundColor('w')
-        main_layout.addWidget(self.view3D, stretch=3)
-        self.view3D.setMinimumWidth(500)
+        # Panel en blanco (izquierda)
+        self.blank_panel = QWidget()
+        self.blank_panel.setMinimumWidth(500)
+        palette = self.blank_panel.palette()
+        palette.setColor(QPalette.Window, QColor('white'))
+        self.blank_panel.setAutoFillBackground(True)
+        self.blank_panel.setPalette(palette)
+
+        main_layout.addWidget(self.blank_panel, stretch=3)
+
+        # Panel derecho (tabla y botones)
+        right_panel = QWidget()
+        right_layout = QVBoxLayout()
+        right_panel.setLayout(right_layout)
 
         # Tabla
         self.table = QTableWidget()
@@ -106,7 +115,6 @@ class BiomecanicaUI(QMainWindow):
         self.table.setEditTriggers(QTableWidget.NoEditTriggers)
         self.table.horizontalHeader().setStretchLastSection(True)
         self.table.verticalHeader().setVisible(False)
-        main_layout.addWidget(self.table, stretch=1)
         self.table.setMinimumWidth(400)
 
         self.joints = {
@@ -138,6 +146,15 @@ class BiomecanicaUI(QMainWindow):
         header.setSectionResizeMode(2, QHeaderView.ResizeToContents)
         header.setSectionResizeMode(3, QHeaderView.ResizeToContents)
 
+        right_layout.addWidget(self.table)
+
+        #Boton de análisis
+        boton_info = QPushButton("Analisis")
+        #boton_info.clicked.connect() TODO: Implementar la accion del boton de analisis
+        right_layout.addWidget(boton_info)
+
+        #Añadimos el panel derecho al layout principal
+        main_layout.addWidget(right_panel, stretch=1)
         main_widget.setLayout(main_layout)
         self.setCentralWidget(main_widget)
 
