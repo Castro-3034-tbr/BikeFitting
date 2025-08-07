@@ -1,14 +1,21 @@
 import sys
+import os
 import numpy as np
+
+# Configuración para mejorar compatibilidad con OpenGL en Linux
+os.environ['QT_QPA_PLATFORM'] = 'xcb'  # Forzar X11 en lugar de Wayland
+os.environ['PYOPENGL_PLATFORM'] = 'glx'
+
 from PyQt5.QtWidgets import (
     QApplication, QMainWindow, QWidget, QHBoxLayout, QVBoxLayout,
-    QTableWidget, QTableWidgetItem, QMessageBox, QPushButton
+    QTableWidget, QTableWidgetItem, QMessageBox, QPushButton,
+    QLabel, QGridLayout, QStackedWidget, QSizePolicy
 )
-from PyQt5.QtCore import QTimer
+from PyQt5.QtCore import QTimer, Qt
 import pyqtgraph.opengl as gl
 from PyQt5.QtWidgets import QHeaderView, QAction, QActionGroup, QMenu
 from PyQt5.QtMultimedia import QCameraInfo
-from PyQt5.QtGui import QPalette, QColor
+from PyQt5.QtGui import QPalette, QColor,QPixmap
 
 
 class BiomecanicaUI(QMainWindow):
@@ -31,7 +38,7 @@ class BiomecanicaUI(QMainWindow):
         # Seleccion de vista
         visualization_group = QActionGroup(self)
         visualization_group.setExclusive(True)
-        view_2d_action = QAction("Vista Imagen", self, checkable=True, checked=True)
+        view_2d_action = QAction("Vista Imagen", self, checkable=True)
         view_3d_action = QAction("Vista 3D", self, checkable=True)
         visualization_group.addAction(view_2d_action)
         visualization_group.addAction(view_3d_action)
@@ -39,8 +46,9 @@ class BiomecanicaUI(QMainWindow):
         visualization_menu.addAction(view_3d_action)
 
         #TODO: Implementar la acciones de cambio de vista
-        # view_2d_action.triggered.connect(self.show_2d_view)
-        # view_3d_action.triggered.connect(self.show_3d_view)
+        self.camaras_configuradas = True #TODO: Cambiar esto cuando se implementen la configuracion de camaras
+        view_2d_action.triggered.connect(lambda: self.cambiar_vista("2D"))
+        view_3d_action.triggered.connect(lambda: self.cambiar_vista("3D"))
 
         #Menu de configuracion
         self.list_cam = ["Cam 1", "Cam 2", "Cam 3", "Cam 4"]
@@ -97,7 +105,68 @@ class BiomecanicaUI(QMainWindow):
         self.blank_panel.setAutoFillBackground(True)
         self.blank_panel.setPalette(palette)
 
-        main_layout.addWidget(self.blank_panel, stretch=3)
+        #Panel 3D
+        self.vista_3d = gl.GLViewWidget()  # Aquí ponerás tu vista 3D real (por ahora placeholder)
+        self.vista_3d.setStyleSheet("background-color: lightgray;")
+
+        # Variables para controlar la inicialización del 3D
+        self.exoesqueleto_items = []
+        self.skeleton_points = np.array([
+                # Torso central
+                [0, 0, 0],          # 0: Pelvis
+                [0, 0, 5.5],        # 1: Cuello
+                [0, 0, 8],          # 2: Cabeza
+
+                # Pierna derecha
+                [1, 0, 0],          # 3: Cadera R
+                [1, 0, -4.5],       # 4: Rodilla R
+                [1, 0, -9],         # 5: Tobillo R
+                [1, 1, -9],         # 6: Pie R
+
+                # Pierna izquierda
+                [-1, 0, 0],         # 7: Cadera L
+                [-1, 0, -4.5],      # 8: Rodilla L
+                [-1, 0, -9],        # 9: Tobillo L
+                [-1, 1, -9],        # 10: Pie L
+
+                # Brazo derecho
+                [2, 0, 5.5],        # 11: Hombro R
+                [3, 0, 2.5],        # 12: Codo R
+                [4, 0, 0],          # 13: Muñeca R
+                [4, 1, 0],          # 14: Mano R
+
+                # Brazo izquierdo
+                [-2, 0, 5.5],       # 15: Hombro L
+                [-3, 0, 2.5],       # 16: Codo L
+                [-4, 0, 0],         # 17: Muñeca L
+                [-4, 1, 0],       # 18: Mano L
+            ], dtype=np.float32)
+        self.gl_initialized = False
+
+        # Panel 2D (cuadrícula de las 4 cámaras)
+        self.vista_2d = QWidget()
+        grid = QGridLayout(self.vista_2d)
+        grid.setContentsMargins(0, 0, 0, 0)
+        grid.setSpacing(2)
+
+        # Crear 4 etiquetas de cámara dinámicas
+        self.cam_labels = []
+        for i, vista in enumerate(self.list_cam):
+            lbl = QLabel(vista)
+            lbl.setStyleSheet("background-color: black; color: white; border: 1px solid gray;")
+            lbl.setAlignment(Qt.AlignCenter)
+            lbl.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
+            self.cam_labels.append(lbl)
+            grid.addWidget(lbl, i // 2, i % 2)
+
+        #Stacked widget para cambiar entre vistas
+        self.stacked_widget = QStackedWidget()
+        self.stacked_widget.addWidget(self.blank_panel)  # Panel en blanco
+        self.stacked_widget.addWidget(self.vista_3d)  # Panel 3D
+        self.stacked_widget.addWidget(self.vista_2d)  # Panel 2D
+
+        main_layout.addWidget(self.stacked_widget, stretch=3)
+        self.stacked_widget.setCurrentIndex(0)  # Empezar con el panel en blanco
 
         # Panel derecho (tabla y botones)
         right_panel = QWidget()
@@ -158,6 +227,12 @@ class BiomecanicaUI(QMainWindow):
         main_widget.setLayout(main_layout)
         self.setCentralWidget(main_widget)
 
+        # Inicializar 3D después de que todo esté configurado
+        self.init_3d_timer = QTimer()
+        self.init_3d_timer.setSingleShot(True)
+        self.init_3d_timer.timeout.connect(self.initialize_3d_when_ready)
+        self.init_3d_timer.start(100)  # Esperar 100ms
+
     def ObtainCamAvailable(self):
         """Obtener las cámaras disponibles y agregarlas al menú de configuración."""
 
@@ -167,6 +242,21 @@ class BiomecanicaUI(QMainWindow):
         if not self.list_cam:
             self.list_cam.append("No hay cámaras disponibles")
             return
+
+    def cambiar_vista(self, vista):
+        """Funcion para cambiar la vista de visualizacion."""
+        if not self.camaras_configuradas:
+            # Si no están configuradas las cámaras, forzar panel blanco
+            self.stacked_widget.setCurrentIndex(0)
+            return
+
+        if vista == "3D":
+            # Asegurar que el 3D esté inicializado antes de mostrar
+            if not self.gl_initialized:
+                self.initialize_3d_when_ready()
+            self.stacked_widget.setCurrentIndex(1)
+        elif vista == "2D":
+            self.stacked_widget.setCurrentIndex(2)
 
     def update_angles(self, angles):
         for joint, angle in angles.items():
@@ -187,6 +277,125 @@ class BiomecanicaUI(QMainWindow):
 
         self.table.resizeRowsToContents()
 
+    def config_exoesqueleto(self):
+        """Funcion que se usa para configurar el exoesqueleto de forma segura."""
+        try:
+            # Limpiar elementos anteriores si existen
+            if hasattr(self, 'exoesqueleto_items'):
+                for item in self.exoesqueleto_items:
+                    if item is not None:
+                        self.vista_3d.removeItem(item)
+
+            self.exoesqueleto_items = []
+
+            # Añadir grilla de referencia
+            grid = gl.GLGridItem()
+            grid.setSize(10, 10)
+            grid.setSpacing(1, 1)
+            self.vista_3d.addItem(grid)
+            self.exoesqueleto_items.append(grid)
+
+            # Configurar la vista 3D
+            self.vista_3d.setCameraPosition(distance=20, elevation=20, azimuth=45)
+
+            # Crear exoesqueleto básico
+            self.create_basic_skeleton()
+
+            self.gl_initialized = True
+
+        except Exception as e:
+            print(f"Error configurando exoesqueleto 3D: {e}")
+            # Fallback: solo mostrar grilla básica
+            try:
+                grid = gl.GLGridItem()
+                self.vista_3d.addItem(grid)
+            except:
+                pass
+
+    def create_basic_skeleton(self):
+        """Crea un exoesqueleto básico y robusto."""
+        try:
+            # Definir puntos del exoesqueleto (escalados para mejor visualización)
+
+            joint_points = np.array([
+                self.skeleton_points[1],  # Cuello
+                self.skeleton_points[3],  # Cadera R
+                self.skeleton_points[4],  # Rodilla R
+                self.skeleton_points[5],  # Tobillo R
+                self.skeleton_points[7],  # Cadera L
+                self.skeleton_points[8],  # Rodilla L
+                self.skeleton_points[9],  # Tobillo L
+                self.skeleton_points[11], # Hombro R
+                self.skeleton_points[12], # Codo R
+                self.skeleton_points[13], # Muñeca R
+                self.skeleton_points[15], # Hombro L
+                self.skeleton_points[16], # Codo L
+                self.skeleton_points[17], # Muñeca L
+            ])
+
+            # Definir conexiones entre puntos
+            connections = [
+
+                # Columna vertebral
+                (0, 1), (1, 2),
+
+                # Conexiones a extremidades
+                (0, 3), (0, 7),    # Pelvis a caderas
+                (1, 11), (1, 15),  # Cuello a hombros
+
+                # Pierna derecha
+                (0, 3), (3, 4), (4, 5), (5, 6),
+
+                # Pierna izquierda
+                (0, 7), (7, 8), (8, 9), (9, 10),
+
+                # Brazo derecho
+                (1, 11), (11, 12), (12, 13), (13, 14),
+
+                # Brazo izquierdo
+                (1, 15), (15, 16), (16, 17), (17, 18),
+            ]
+
+            # Crear puntos articulares
+            scatter = gl.GLScatterPlotItem(
+                pos=joint_points,
+                size=1,
+                color=(1, 0, 0, 0.8),  # Rojo semi-transparente
+                pxMode=False
+            )
+            self.vista_3d.addItem(scatter)
+            self.exoesqueleto_items.append(scatter)
+
+            # Crear líneas de conexión
+            for start_idx, end_idx in connections:
+                try:
+                    line_points = np.array([
+                        self.skeleton_points[start_idx],
+                        self.skeleton_points[end_idx]
+                    ])
+
+                    line = gl.GLLinePlotItem(
+                        pos=line_points,
+                        color=(0.8, 0.8, 0.8, 1.0),  # Gris
+                        width=2,
+                        antialias=True
+                    )
+                    self.vista_3d.addItem(line)
+                    self.exoesqueleto_items.append(line)
+                except Exception as e:
+                    print(f"Error creando línea {start_idx}-{end_idx}: {e}")
+                    continue
+
+        except Exception as e:
+            print(f"Error creando exoesqueleto básico: {e}")
+
+    def initialize_3d_when_ready(self):
+        """Inicializa los elementos 3D cuando el widget esté listo."""
+        if not self.gl_initialized:
+            try:
+                self.config_exoesqueleto()
+            except Exception as e:
+                print(f"Error en inicialización 3D: {e}")
 
 def update_test_angles(window: BiomecanicaUI):
     angles = {}
