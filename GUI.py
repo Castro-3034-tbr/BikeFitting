@@ -130,17 +130,77 @@ class BiomecanicaUI(QMainWindow):
                 [-1, 1, -9],        # 10: Pie L
 
                 # Brazo derecho
-                [2, 0, 5.5],        # 11: Hombro R
-                [3, 0, 2.5],        # 12: Codo R
-                [4, 0, 0],          # 13: Muñeca R
-                [4, 1, 0],          # 14: Mano R
+                [2.5, 0, 5.5],        # 11: Hombro R
+                [2.5, 0, 2.5],        # 12: Codo R
+                [2.5, 0, 0],          # 13: Muñeca R
+                [2.5, 1, 0],          # 14: Mano R
 
                 # Brazo izquierdo
-                [-2, 0, 5.5],       # 15: Hombro L
-                [-3, 0, 2.5],       # 16: Codo L
-                [-4, 0, 0],         # 17: Muñeca L
-                [-4, 1, 0],       # 18: Mano L
+                [-2.5, 0, 5.5],       # 15: Hombro L
+                [-2.5, 0, 2.5],       # 16: Codo L
+                [-2.5, 0, 0],         # 17: Muñeca L
+                [-2.5, 1, 0],       # 18: Mano L
             ], dtype=np.float32)
+
+        self.joint_points = np.array([
+                self.skeleton_points[0],  # 0: Pelvis
+                self.skeleton_points[1],  # 1: Cuello
+                self.skeleton_points[3],  # 2: Cadera R
+                self.skeleton_points[4],  # 3: Rodilla R
+                self.skeleton_points[5],  # 4: Tobillo R
+                self.skeleton_points[7],  # 5: Cadera L
+                self.skeleton_points[8],  # 6: Rodilla L
+                self.skeleton_points[9],  # 7: Tobillo L
+                self.skeleton_points[11], # 8: Hombro R
+                self.skeleton_points[12], # 9: Codo R
+                self.skeleton_points[13], # 10: Muñeca R
+                self.skeleton_points[15], # 11: Hombro L
+                self.skeleton_points[16], # 12: Codo L
+                self.skeleton_points[17], # 13: Muñeca L
+            ])
+
+        self.angles_joints = {
+            "Pelvis": [0, 0, 0],
+            "Cuello": [0, 0, 0],
+            "Cadera R": [0, 0, 0],
+            "Rodilla R": [0, 0, 0],
+            "Tobillo R": [0, 0, 0],
+            "Cadera L": [0, 0, 0],
+            "Rodilla L": [0, 0, 0],
+            "Tobillo L": [0, 0, 0],
+            "Hombro R": [0, 0, 0],
+            "Codo R": [0, 0, 0],
+            "Muñeca R": [0, 0, 0],
+            "Hombro L": [0, 0, 0],
+            "Codo L": [0, 0, 0],
+            "Muñeca L": [0, 0, 0],
+        }
+
+            # Definir conexiones entre puntos (start_index, end_index, joint_index, link_index)
+        self.connections = [
+            # Columna vertebral
+            (0, 1, 0, 0), (1, 2, 1, 1),
+            # Pierna derecha
+            (0, 3, None, None), (3, 4, 2, 2), (4, 5, 3, 3), (5, 6, 4, 4),
+            # Pierna izquierda
+            (0, 7, None, None), (7, 8, 5, 2), (8, 9, 6, 3), (9, 10, 7, 4),
+            # Brazo derecho
+            (1, 11, None, None), (11, 12, 8, 5), (12, 13, 9, 6), (13, 14, 10, 7),
+            # Brazo izquierdo
+            (1, 15, None, None), (15, 16, 11, 5), (16, 17, 12, 6), (17, 18, 13, 7),
+        ]
+
+        self.link_dimensions = np.array([
+            #Dimension de cada una de los eslabones del exoesqueleto
+            5.5,  #0: Tronco
+            2.5,  #1: Cuello
+            4.5,  #2: Muslo
+            4.5,  #3: Pierna
+            1.4,  #4: Pie
+            3.0,  #5: Brazo
+            2.5,  #6: Antebrazo
+            1.0,  #7: Mano
+        ])
         self.gl_initialized = False
 
         # Panel 2D (cuadrícula de las 4 cámaras)
@@ -185,22 +245,6 @@ class BiomecanicaUI(QMainWindow):
         self.table.horizontalHeader().setStretchLastSection(True)
         self.table.verticalHeader().setVisible(False)
         self.table.setMinimumWidth(400)
-
-        self.angles_joints = {
-            "Tobillo R": [0, 0, 0],
-            "Tobillo L": [0, 0, 0],
-            "Rodilla R": [0, 0, 0],
-            "Rodilla L": [0, 0, 0],
-            "Cadera R": [0, 0, 0],
-            "Cadera L": [0, 0, 0],
-            "Hombro R": [0, 0, 0],
-            "Hombro L": [0, 0, 0],
-            "Codo R": [0, 0, 0],
-            "Codo L": [0, 0, 0],
-            "Muñeca R": [0, 0, 0],
-            "Muñeca L": [0, 0, 0],
-            "Cuello": [0, 0, 0]
-        }
 
         self.table.setRowCount(len(self.angles_joints))
         for row, joint in enumerate(self.angles_joints):
@@ -299,7 +343,7 @@ class BiomecanicaUI(QMainWindow):
             self.vista_3d.setCameraPosition(distance=20, elevation=20, azimuth=45)
 
             # Crear exoesqueleto básico
-            self.create_basic_skeleton()
+            self.update_skeleton()
 
             self.gl_initialized = True
 
@@ -312,53 +356,21 @@ class BiomecanicaUI(QMainWindow):
             except:
                 pass
 
-    def create_basic_skeleton(self):
+    def update_skeleton(self):
         """Crea un exoesqueleto basico y robusto."""
         try:
-            # Definir puntos del exoesqueleto (escalados para mejor visualizacion)
-
-            joint_points = np.array([
-                self.skeleton_points[1],  # Cuello
-                self.skeleton_points[3],  # Cadera R
-                self.skeleton_points[4],  # Rodilla R
-                self.skeleton_points[5],  # Tobillo R
-                self.skeleton_points[7],  # Cadera L
-                self.skeleton_points[8],  # Rodilla L
-                self.skeleton_points[9],  # Tobillo L
-                self.skeleton_points[11], # Hombro R
-                self.skeleton_points[12], # Codo R
-                self.skeleton_points[13], # Muñeca R
-                self.skeleton_points[15], # Hombro L
-                self.skeleton_points[16], # Codo L
-                self.skeleton_points[17], # Muñeca L
-            ])
-
-            # Definir conexiones entre puntos
-            connections = [
-
-                # Columna vertebral
-                (0, 1), (1, 2),
-
-                # Conexiones a extremidades
-                (0, 3), (0, 7),    # Pelvis a caderas
-                (1, 11), (1, 15),  # Cuello a hombros
-
-                # Pierna derecha
-                (0, 3), (3, 4), (4, 5), (5, 6),
-
-                # Pierna izquierda
-                (0, 7), (7, 8), (8, 9), (9, 10),
-
-                # Brazo derecho
-                (1, 11), (11, 12), (12, 13), (13, 14),
-
-                # Brazo izquierdo
-                (1, 15), (15, 16), (16, 17), (17, 18),
-            ]
+            #Eliminamos todos los items del exoesqueleto anterior
+            if hasattr(self, 'exoesqueleto_items'):
+                for item in self.exoesqueleto_items:
+                    try:
+                        self.vista_3d.removeItem(item)
+                    except Exception as e:
+                        print(f"Error eliminando item: {e}")
+                self.exoesqueleto_items = []
 
             # Crear puntos articulares
             scatter = gl.GLScatterPlotItem(
-                pos=joint_points,
+                pos=self.joint_points,
                 size=1,
                 color=(1, 0, 0, 0.8),  # Rojo semi-transparente
                 pxMode=False
@@ -367,7 +379,7 @@ class BiomecanicaUI(QMainWindow):
             self.exoesqueleto_items.append(scatter)
 
             # Crear lineas de conexion
-            for start_idx, end_idx in connections:
+            for start_idx, end_idx, joint_idx, link_idx in self.connections:
                 try:
                     line_points = np.array([
                         self.skeleton_points[start_idx],
@@ -389,9 +401,39 @@ class BiomecanicaUI(QMainWindow):
         except Exception as e:
             print(f"Error creando exoesqueleto basico: {e}")
 
-    def actualizar_points(self, angles):
+    def calcular_punto_3d(self, origen, longitud, theta):
+        """Calcula un punto 3D a partir de un origen, longitud y angulos theta y phi."""
+        x = origen[0]
+        y = origen[1] + longitud * np.cos(theta)
+        z = origen[2] + longitud * np.sin(theta)
+        return np.array([x, y, z], dtype=np.float32)
+
+    def update_points(self):
         """Actualizamos los puntos de exoesqueleto segun los angulos de cada una de las articulaciones."""
         pass
+        #Calculamos el punto para cada articulacion ( Vamos a probar con la cadera derecha, rodilla derecha y tobillo derecho )
+        for i, conect in enumerate(self.connections):
+            start_idx, end_idx, joint_idx, link_idx = conect
+            if joint_idx is None or link_idx is None:
+                continue
+            print(f"Actualizando punto {end_idx} desde {start_idx} con angulo {joint_idx} y link {link_idx}")
+            #Obtenemos la informacion
+            start_point = self.skeleton_points[start_idx]
+            clave=list(self.angles_joints.keys())[joint_idx]
+            angle = self.angles_joints[clave][0]
+            angle = np.radians(angle)  # Convertir a radianes
+            longitud = self.link_dimensions[link_idx]
+
+            print(f"Actualizando punto {end_idx} \n \tStart: {start_idx} --> {start_point}\n \tLongitud: {longitud} \n \tAngulo: {angle}")
+
+            #calculamos el nuevo punto
+            new_point = self.calcular_punto_3d(start_point, longitud, angle)
+
+            self.skeleton_points[end_idx] = new_point
+            self.joint_points[joint_idx] = new_point
+
+        # Actualizamos los puntos articulares
+        self.update_skeleton()
 
     def initialize_3d_when_ready(self):
         """Inicializa los elementos 3D cuando el widget este listo."""
@@ -410,6 +452,7 @@ def update_test_angles(window: BiomecanicaUI):
         window.angles_joints[joint][0] = new_angle
 
     window.update_angles()
+    window.update_points()
 
 
 if __name__ == "__main__":
