@@ -9,7 +9,7 @@ os.environ['PYOPENGL_PLATFORM'] = 'glx'
 from PyQt5.QtWidgets import (
     QApplication, QMainWindow, QWidget, QHBoxLayout, QVBoxLayout,
     QTableWidget, QTableWidgetItem, QMessageBox, QPushButton,
-    QLabel, QGridLayout, QStackedWidget, QSizePolicy
+    QLabel, QGridLayout, QStackedWidget, QSizePolicy, QDialog, QComboBox
 )
 from PyQt5.QtCore import QTimer, Qt
 import pyqtgraph.opengl as gl
@@ -46,7 +46,7 @@ class BiomecanicaUI(QMainWindow):
         visualization_menu.addAction(view_3d_action)
 
         #TODO: Implementar la acciones de cambio de vista
-        self.camaras_configuradas = True #TODO: Cambiar esto cuando se implementen la configuracion de camaras
+        self.camaras_configuradas = False #TODO: Cambiar esto cuando se implementen la configuracion de camaras
         view_2d_action.triggered.connect(lambda: self.cambiar_vista("2D"))
         view_3d_action.triggered.connect(lambda: self.cambiar_vista("3D"))
 
@@ -70,7 +70,7 @@ class BiomecanicaUI(QMainWindow):
             "Vista Frontal":"",
         }
         conf_cam_menu = QAction("Configuracion de Camaras", self)
-        #conf_cam_menu.triggered.connect(self.MenuConfigCam) TODO: Implementar la pagina de configuracion de camaras
+        conf_cam_menu.triggered.connect(self.open_configcam_window)
         config_menu.addAction(conf_cam_menu)
 
         # Acción salir
@@ -158,6 +158,7 @@ class BiomecanicaUI(QMainWindow):
                 self.skeleton_points[16], # 12: Codo L
                 self.skeleton_points[17], # 13: Muñeca L
             ])
+
 
         self.angles_joints = {
             "Pelvis": [0, 0, 0],
@@ -292,6 +293,10 @@ class BiomecanicaUI(QMainWindow):
         if not self.camaras_configuradas:
             # Si no estan configuradas las camaras, forzar panel blanco
             self.stacked_widget.setCurrentIndex(0)
+
+            # Mostrar mensaje de advertencia
+            QMessageBox.warning(self, "Advertencia", "Por favor, configure las cámaras antes de cambiar la vista. Mínimo es necesario configurar la camara derecha y la izquierda.")
+
             return
 
         if vista == "3D":
@@ -416,7 +421,6 @@ class BiomecanicaUI(QMainWindow):
             start_idx, end_idx, joint_idx, link_idx = conect
             if joint_idx is None or link_idx is None:
                 continue
-            print(f"Actualizando punto {end_idx} desde {start_idx} con angulo {joint_idx} y link {link_idx}")
             #Obtenemos la informacion
             start_point = self.skeleton_points[start_idx]
             clave=list(self.angles_joints.keys())[joint_idx]
@@ -424,10 +428,12 @@ class BiomecanicaUI(QMainWindow):
             angle = np.radians(angle)  # Convertir a radianes
             longitud = self.link_dimensions[link_idx]
 
-            print(f"Actualizando punto {end_idx} \n \tStart: {start_idx} --> {start_point}\n \tLongitud: {longitud} \n \tAngulo: {angle}")
-
             #calculamos el nuevo punto
             new_point = self.calcular_punto_3d(start_point, longitud, angle)
+
+            if joint_idx in [2,3,4,5,6,7]:
+                # Si es una articulacion de la pierna, invertimos el eje z
+                new_point[2] = -new_point[2]
 
             self.skeleton_points[end_idx] = new_point
             self.joint_points[joint_idx] = new_point
@@ -442,6 +448,120 @@ class BiomecanicaUI(QMainWindow):
                 self.config_exoesqueleto()
             except Exception as e:
                 print(f"Error en inicializacion 3D: {e}")
+
+    def open_configcam_window(self):
+        """Abre la ventana de configuracion de camaras."""
+        self.config_cam_window = ConfigCamWindow(self)  # mantener referencia para que no se destruya
+        self.config_cam_window.show()  # o .show() si prefieres no modal
+
+class ConfigCamWindow(QDialog):
+    def __init__(self, main_window):
+        super().__init__(main_window)
+        self.main_window = main_window  # acceso a la ventana principal
+        self.setWindowTitle("Configuración de Cámaras")
+        self.setMinimumSize(400, 300)
+
+        layout = QVBoxLayout()
+        self.setLayout(layout)
+
+        # Título arriba
+        title = QLabel("Selecciona la cámara correspondiente para cada vista")
+        title.setAlignment(Qt.AlignCenter)
+        title.setStyleSheet("font-size: 18px; font-weight: bold;")
+        layout.addWidget(title)
+
+        # Contenedor central con imagen + combos
+        center_layout = QGridLayout()
+        layout.addLayout(center_layout)
+
+        # Imagen central
+        self.image_label = QLabel()
+        self.image_label.setPixmap(QPixmap("./ImagenPrueba.jpg").scaled(300, 300, Qt.KeepAspectRatio))
+        self.image_label.setAlignment(Qt.AlignCenter)
+        center_layout.addWidget(self.image_label, 1, 1)
+
+        # Vistas y combos
+        self.combo_boxes = {}
+        self.add_view_combo(center_layout, "Frontal", 0, 1)
+        self.add_view_combo(center_layout, "Izquierda", 1, 0)
+        self.add_view_combo(center_layout, "Derecha", 1, 2)
+        self.add_view_combo(center_layout, "Trasera", 2, 1)
+
+
+    def add_view_combo(self, layout, name, row, col):
+        """Crea una etiqueta + combo para una vista"""
+        #Creamos la etiqueta
+        vbox = QVBoxLayout()
+        label = QLabel(name)
+        label.setAlignment(Qt.AlignCenter)
+
+        #Creamos el combo
+        combo = QComboBox()
+        combo.addItem("Sin asignar ")  # opción en blanco
+        combo.addItems(self.main_window.list_cam)  # Usar las cámaras disponibles
+        combo.currentIndexChanged.connect(self.update_combo_options)
+
+        # Añadimos al layout
+        vbox.addWidget(label)
+        vbox.addWidget(combo)
+
+        # Creamos un contenedor para el layout vertical
+        container = QWidget()
+        container.setLayout(vbox)
+        container.setSizePolicy(QSizePolicy.Preferred, QSizePolicy.Fixed)  # evita que se desplace mucho verticalmente
+
+        # Añadimos el contenedor al layout principal
+        layout.addWidget(container, row, col, alignment=Qt.AlignCenter)
+
+        # Guardamos el combo en un diccionario para actualizaciones posteriores
+        self.combo_boxes[name] = combo
+
+    def update_combo_options(self):
+        """Cuando cambia una selección, actualizamos el resto de combos."""
+
+        selected = set()
+        for name, combo in self.combo_boxes.items():
+            text = combo.currentText()
+            if text and text != "Sin asignar" and text != "":  # ignoramos si está vacío
+                selected.add(text)
+
+        # Actualizamos combos
+        for name, combo in self.combo_boxes.items():
+            # Obtener el texto actual del combo
+            current = combo.currentText()
+            # Evitar señales para evitar bucles infinitos
+            combo.blockSignals(True)
+
+            # Limpiar el combo y añadir la opción en blanco
+            combo.clear()
+            combo.addItem("Sin asignar")  # opción en blanco
+
+            # Mostrar solo las cámaras no seleccionadas o la actual
+            options = [cam for cam in self.main_window.list_cam if cam == current or cam not in selected]
+            combo.addItems(options)
+
+            # Si la opción actual está en las opciones disponibles, la seleccionamos
+            if current in options or current == "Sin asignar":
+                combo.setCurrentText(current)
+
+            combo.blockSignals(False)
+
+        #Comprobamos si la configuracion es la minima necesaria
+        self.check_config()
+
+    def check_config(self):
+        """Verifica que tenemos la configuracion necesaria de camaras para iniciar el analisis."""
+
+        #Obtenemos el valor de los boxes izquierdos y derechos
+        left_value = self.combo_boxes["Izquierda"].currentText()
+        right_value = self.combo_boxes["Derecha"].currentText()
+
+        #Comprobamos que no esten vacios
+        if left_value != "Sin asignar" or right_value != "Sin asignar" or left_value != "" or right_value != "":
+            #Si tenemos configuracion minima, habilitamos el boton de analisis
+            self.main_window.camaras_configuradas = True
+
+
 
 def update_test_angles(window: BiomecanicaUI):
     """Funcion que usamos para probar la actualizacion de angulos"""
