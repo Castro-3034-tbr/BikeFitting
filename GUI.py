@@ -21,14 +21,14 @@ from PyQt5.QtGui import QPalette, QColor,QPixmap
 class BiomecanicaUI(QMainWindow):
     def __init__(self):
         super().__init__()
-        self.setWindowTitle("Análisis Biomecánico 3D")
+        self.setWindowTitle("Analisis Biomecanico 3D")
         self.setGeometry(100, 100, 1800, 900)
 
         # --- Barra de menu ---
         menubar = self.menuBar()
         file_menu = menubar.addMenu("Archivo")
-        visualization_menu = menubar.addMenu("Visualización")
-        config_menu = menubar.addMenu("Configuración")
+        visualization_menu = menubar.addMenu("Visualizacion")
+        config_menu = menubar.addMenu("Configuracion")
         help_menu = menubar.addMenu("Ayuda")
 
         #Exportar datos
@@ -55,7 +55,7 @@ class BiomecanicaUI(QMainWindow):
         # self.ObtainCamAvailable() TODO:
 
         #Visualizar camaras disponibles
-        cam_menu = QMenu("Cámaras Disponibles", self)
+        cam_menu = QMenu("Camaras Disponibles", self)
         for cam in self.list_cam:
             action = QAction(cam, self)
             cam_menu.addAction(action)
@@ -69,7 +69,7 @@ class BiomecanicaUI(QMainWindow):
             "vista Trasera":"",
             "Vista Frontal":"",
         }
-        conf_cam_menu = QAction("Configuración de Cámaras", self)
+        conf_cam_menu = QAction("Configuracion de Camaras", self)
         #conf_cam_menu.triggered.connect(self.MenuConfigCam) TODO: Implementar la pagina de configuracion de camaras
         config_menu.addAction(conf_cam_menu)
 
@@ -88,9 +88,9 @@ class BiomecanicaUI(QMainWindow):
         # Acción acerca de
         about_action = QAction("Acerca de...", self)
         about_action.triggered.connect(lambda: QMessageBox.information(self, "Acerca de",
-                                                                        "Aplicación de Bikefitting basada en visión artificial.\n\n"
+                                                                        "Aplicacion de Bikefitting basada en vision artificial.\n\n"
                                                                         "Desarrollada por: Castro-3034-tbr\n\n"
-                                                                        "Versión 1.0\n\n"))
+                                                                        "Version 1.0\n\n"))
         help_menu.addAction(about_action)
 
         # --- Panel principal ---
@@ -176,7 +176,7 @@ class BiomecanicaUI(QMainWindow):
         # Tabla
         self.table = QTableWidget()
         self.table.setColumnCount(4)
-        self.table.setHorizontalHeaderLabels(["Articulación", "Ángulo (°)", "Máximo (°)", "Mínimo (°)"])
+        self.table.setHorizontalHeaderLabels(["Articulacion", "Angulo (°)", "Maximo (°)", "Minimo (°)"])
         self.table.setStyleSheet(
             "QTableWidget { background-color: #f0f0f0; font-size: 14px; } "
             "QHeaderView::section { background-color: #d0d0d0; font-weight: bold; padding: 4px; border: 1px solid #a0a0a0; }"
@@ -186,7 +186,7 @@ class BiomecanicaUI(QMainWindow):
         self.table.verticalHeader().setVisible(False)
         self.table.setMinimumWidth(400)
 
-        self.joints = {
+        self.angles_joints = {
             "Tobillo R": [0, 0, 0],
             "Tobillo L": [0, 0, 0],
             "Rodilla R": [0, 0, 0],
@@ -202,8 +202,8 @@ class BiomecanicaUI(QMainWindow):
             "Cuello": [0, 0, 0]
         }
 
-        self.table.setRowCount(len(self.joints))
-        for row, joint in enumerate(self.joints):
+        self.table.setRowCount(len(self.angles_joints))
+        for row, joint in enumerate(self.angles_joints):
             self.table.setItem(row, 0, QTableWidgetItem(joint))
 
         self.table.setMinimumHeight(400)
@@ -217,7 +217,7 @@ class BiomecanicaUI(QMainWindow):
 
         right_layout.addWidget(self.table)
 
-        #Boton de análisis
+        #Boton de analisis
         boton_info = QPushButton("Analisis")
         #boton_info.clicked.connect() TODO: Implementar la accion del boton de analisis
         right_layout.addWidget(boton_info)
@@ -227,53 +227,53 @@ class BiomecanicaUI(QMainWindow):
         main_widget.setLayout(main_layout)
         self.setCentralWidget(main_widget)
 
-        # Inicializar 3D después de que todo esté configurado
+        # Inicializar 3D despues de que todo este configurado
         self.init_3d_timer = QTimer()
         self.init_3d_timer.setSingleShot(True)
         self.init_3d_timer.timeout.connect(self.initialize_3d_when_ready)
         self.init_3d_timer.start(100)  # Esperar 100ms
 
     def ObtainCamAvailable(self):
-        """Obtener las cámaras disponibles y agregarlas al menú de configuración."""
+        """Obtener las camaras disponibles y agregarlas al menu de configuracion."""
 
-        #Obtenemos las cámaras disponibles
+        #Obtenemos las camaras disponibles
         cameras = QCameraInfo.availableCameras()
         self.list_cam = [cam.description() for cam in cameras]
         if not self.list_cam:
-            self.list_cam.append("No hay cámaras disponibles")
+            self.list_cam.append("No hay camaras disponibles")
             return
 
     def cambiar_vista(self, vista):
         """Funcion para cambiar la vista de visualizacion."""
         if not self.camaras_configuradas:
-            # Si no están configuradas las cámaras, forzar panel blanco
+            # Si no estan configuradas las camaras, forzar panel blanco
             self.stacked_widget.setCurrentIndex(0)
             return
 
         if vista == "3D":
-            # Asegurar que el 3D esté inicializado antes de mostrar
+            # Asegurar que el 3D este inicializado antes de mostrar
             if not self.gl_initialized:
                 self.initialize_3d_when_ready()
             self.stacked_widget.setCurrentIndex(1)
         elif vista == "2D":
             self.stacked_widget.setCurrentIndex(2)
 
-    def update_angles(self, angles):
-        for joint, angle in angles.items():
-            actual = angle
-            max_val = self.joints[joint][1]
-            min_val = self.joints[joint][2]
+    def update_angles(self):
+        for joint, angle in self.angles_joints.items():
+            actual = angle[0]
+            max_val = angle[1]
+            min_val = angle[2]
 
-            row = list(self.joints.keys()).index(joint)
+            row = list(self.angles_joints.keys()).index(joint)
             self.table.setItem(row, 1, QTableWidgetItem(f"{actual:.2f}"))
 
             if actual > max_val:
-                self.joints[joint][1] = actual
+                self.angles_joints[joint][1] = actual
             if actual < min_val or min_val == 0:
-                self.joints[joint][2] = actual
+                self.angles_joints[joint][2] = actual
 
-            self.table.setItem(row, 2, QTableWidgetItem(f"{self.joints[joint][1]:.2f}"))
-            self.table.setItem(row, 3, QTableWidgetItem(f"{self.joints[joint][2]:.2f}"))
+            self.table.setItem(row, 2, QTableWidgetItem(f"{self.angles_joints[joint][1]:.2f}"))
+            self.table.setItem(row, 3, QTableWidgetItem(f"{self.angles_joints[joint][2]:.2f}"))
 
         self.table.resizeRowsToContents()
 
@@ -313,9 +313,9 @@ class BiomecanicaUI(QMainWindow):
                 pass
 
     def create_basic_skeleton(self):
-        """Crea un exoesqueleto básico y robusto."""
+        """Crea un exoesqueleto basico y robusto."""
         try:
-            # Definir puntos del exoesqueleto (escalados para mejor visualización)
+            # Definir puntos del exoesqueleto (escalados para mejor visualizacion)
 
             joint_points = np.array([
                 self.skeleton_points[1],  # Cuello
@@ -366,7 +366,7 @@ class BiomecanicaUI(QMainWindow):
             self.vista_3d.addItem(scatter)
             self.exoesqueleto_items.append(scatter)
 
-            # Crear líneas de conexión
+            # Crear lineas de conexion
             for start_idx, end_idx in connections:
                 try:
                     line_points = np.array([
@@ -383,27 +383,33 @@ class BiomecanicaUI(QMainWindow):
                     self.vista_3d.addItem(line)
                     self.exoesqueleto_items.append(line)
                 except Exception as e:
-                    print(f"Error creando línea {start_idx}-{end_idx}: {e}")
+                    print(f"Error creando linea {start_idx}-{end_idx}: {e}")
                     continue
 
         except Exception as e:
-            print(f"Error creando exoesqueleto básico: {e}")
+            print(f"Error creando exoesqueleto basico: {e}")
+
+    def actualizar_points(self, angles):
+        """Actualizamos los puntos de exoesqueleto segun los angulos de cada una de las articulaciones."""
+        pass
 
     def initialize_3d_when_ready(self):
-        """Inicializa los elementos 3D cuando el widget esté listo."""
+        """Inicializa los elementos 3D cuando el widget este listo."""
         if not self.gl_initialized:
             try:
                 self.config_exoesqueleto()
             except Exception as e:
-                print(f"Error en inicialización 3D: {e}")
+                print(f"Error en inicializacion 3D: {e}")
 
 def update_test_angles(window: BiomecanicaUI):
-    angles = {}
-    for joint in window.joints:
+    """Funcion que usamos para probar la actualizacion de angulos"""
+
+    # Actualizamos los angulos de las articulaciones con valores aleatorios entre 30 y 160 grados
+    for joint in window.angles_joints:
         new_angle = np.random.uniform(30, 160)
-        window.joints[joint][0] = new_angle
-        angles[joint] = new_angle
-    window.update_angles(angles)
+        window.angles_joints[joint][0] = new_angle
+
+    window.update_angles()
 
 
 if __name__ == "__main__":
