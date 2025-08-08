@@ -1,15 +1,16 @@
 import sys
 import os
 import numpy as np
+import pyqtgraph as pg
 
-# Configuración para mejorar compatibilidad con OpenGL en Linux
+# Configuracion para mejorar compatibilidad con OpenGL en Linux
 os.environ['QT_QPA_PLATFORM'] = 'xcb'  # Forzar X11 en lugar de Wayland
 os.environ['PYOPENGL_PLATFORM'] = 'glx'
 
 from PyQt5.QtWidgets import (
     QApplication, QMainWindow, QWidget, QHBoxLayout, QVBoxLayout,
     QTableWidget, QTableWidgetItem, QMessageBox, QPushButton,
-    QLabel, QGridLayout, QStackedWidget, QSizePolicy, QDialog, QComboBox
+    QLabel, QGridLayout, QStackedWidget, QSizePolicy, QDialog, QComboBox,
 )
 from PyQt5.QtCore import QTimer, Qt
 import pyqtgraph.opengl as gl
@@ -17,7 +18,12 @@ from PyQt5.QtWidgets import QHeaderView, QAction, QActionGroup, QMenu
 from PyQt5.QtMultimedia import QCameraInfo
 from PyQt5.QtGui import QPalette, QColor,QPixmap
 
+import matplotlib.pyplot as plt
+from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 
+import random
+
+#region: Main Window 
 class BiomecanicaUI(QMainWindow):
     def __init__(self):
         super().__init__()
@@ -73,7 +79,7 @@ class BiomecanicaUI(QMainWindow):
         conf_cam_menu.triggered.connect(self.open_configcam_window)
         config_menu.addAction(conf_cam_menu)
 
-        # Acción salir
+        # Accion salir
         exit_action = QAction("Salir", self)
         exit_action.triggered.connect(self.close)
         file_menu.addAction(exit_action)
@@ -85,7 +91,7 @@ class BiomecanicaUI(QMainWindow):
                                                                         "https://github.com/tu-repo"))
         help_menu.addAction(repo_action)
 
-        # Acción acerca de
+        # Accion acerca de
         about_action = QAction("Acerca de...", self)
         about_action.triggered.connect(lambda: QMessageBox.information(self, "Acerca de",
                                                                         "Aplicacion de Bikefitting basada en vision artificial.\n\n"
@@ -106,10 +112,10 @@ class BiomecanicaUI(QMainWindow):
         self.blank_panel.setPalette(palette)
 
         #Panel 3D
-        self.vista_3d = gl.GLViewWidget()  # Aquí ponerás tu vista 3D real (por ahora placeholder)
+        self.vista_3d = gl.GLViewWidget()  # Aqui pondras tu vista 3D real (por ahora placeholder)
         self.vista_3d.setStyleSheet("background-color: lightgray;")
 
-        # Variables para controlar la inicialización del 3D
+        # Variables para controlar la inicializacion del 3D
         self.exoesqueleto_items = []
         self.skeleton_points = np.array([
                 # Torso central
@@ -159,9 +165,8 @@ class BiomecanicaUI(QMainWindow):
                 self.skeleton_points[17], # 13: Muñeca L
             ])
 
-
         self.angles_joints = {
-            "Pelvis": [0, 0, 0],
+            "Pelvis": [0, 0, 0, ],
             "Cuello": [0, 0, 0],
             "Cadera R": [0, 0, 0],
             "Rodilla R": [0, 0, 0],
@@ -204,13 +209,18 @@ class BiomecanicaUI(QMainWindow):
         ])
         self.gl_initialized = False
 
-        # Panel 2D (cuadrícula de las 4 cámaras)
+
+        #Creamos las variables de guardado de valores
+        self.valores_grafica_L = [[[],[]],[[],[]]]
+        self.valores_grafica_R = [[[],[]],[[],[]]]
+
+        # Panel 2D (cuadricula de las 4 camaras)
         self.vista_2d = QWidget()
         grid = QGridLayout(self.vista_2d)
         grid.setContentsMargins(0, 0, 0, 0)
         grid.setSpacing(2)
 
-        # Crear 4 etiquetas de cámara dinámicas
+        # Crear 4 etiquetas de camara dinamicas
         self.cam_labels = []
         for i, vista in enumerate(self.list_cam):
             lbl = QLabel(vista)
@@ -264,13 +274,17 @@ class BiomecanicaUI(QMainWindow):
 
         #Boton de analisis
         boton_info = QPushButton("Analisis")
-        #boton_info.clicked.connect() TODO: Implementar la accion del boton de analisis
+        boton_info.clicked.connect(self.open_analisis_window)
         right_layout.addWidget(boton_info)
 
-        #Añadimos el panel derecho al layout principal
+        #Anadimos el panel derecho al layout principal
         main_layout.addWidget(right_panel, stretch=1)
         main_widget.setLayout(main_layout)
         self.setCentralWidget(main_widget)
+
+        #Cremos las variables de las paguinas necesarias
+        self.config_cam_window = ConfigCamWindow(self)
+        self.analisis_window = AnalisisWindow(self)
 
         # Inicializar 3D despues de que todo este configurado
         self.init_3d_timer = QTimer()
@@ -295,7 +309,7 @@ class BiomecanicaUI(QMainWindow):
             self.stacked_widget.setCurrentIndex(0)
 
             # Mostrar mensaje de advertencia
-            QMessageBox.warning(self, "Advertencia", "Por favor, configure las cámaras antes de cambiar la vista. Mínimo es necesario configurar la camara derecha y la izquierda.")
+            QMessageBox.warning(self, "Advertencia", "Por favor, configure las camaras antes de cambiar la vista. Minimo es necesario configurar la camara derecha y la izquierda.")
 
             return
 
@@ -337,7 +351,7 @@ class BiomecanicaUI(QMainWindow):
 
             self.exoesqueleto_items = []
 
-            # Añadir grilla de referencia
+            # Anadir grilla de referencia
             grid = gl.GLGridItem()
             grid.setSize(10, 10)
             grid.setSpacing(1, 1)
@@ -347,7 +361,7 @@ class BiomecanicaUI(QMainWindow):
             # Configurar la vista 3D
             self.vista_3d.setCameraPosition(distance=20, elevation=20, azimuth=45)
 
-            # Crear exoesqueleto básico
+            # Crear exoesqueleto basico
             self.update_skeleton()
 
             self.gl_initialized = True
@@ -451,9 +465,17 @@ class BiomecanicaUI(QMainWindow):
 
     def open_configcam_window(self):
         """Abre la ventana de configuracion de camaras."""
-        self.config_cam_window = ConfigCamWindow(self)  # mantener referencia para que no se destruya
-        self.config_cam_window.show()  # o .show() si prefieres no modal
 
+        #Abrimos la ventana de configuracion de camaras
+        self.config_cam_window.show()
+
+    def open_analisis_window(self):
+        """Abre la ventana de analisis de datos."""
+
+        #Abrimos la ventana de analisis de datos
+        self.analisis_window.show()
+
+#region: Config Cam Window
 class ConfigCamWindow(QDialog):
     def __init__(self, main_window):
         super().__init__(main_window)
@@ -561,6 +583,217 @@ class ConfigCamWindow(QDialog):
             #Si tenemos configuracion minima, habilitamos el boton de analisis
             self.main_window.camaras_configuradas = True
 
+class AnalisisWindow(QDialog):
+    """Ventana de análisis de datos biomecánicos."""
+    def __init__(self, main_window=None):
+        super().__init__(main_window)
+        self.main_window = main_window
+        self.setWindowTitle("Análisis de Datos")
+        self.setMinimumSize(1800, 900)
+
+        # Layout principal vertical
+        main_vlayout = QVBoxLayout(self)
+
+        # ===== Grid superior único 7x4 =====
+        self.grid_superior = QGridLayout()
+        main_vlayout.addLayout(self.grid_superior)
+
+        # Rellenamos con cada uno de los graficos
+        # self.optimal_ranges = [
+        #     ("Pelvis", [[0, 360], [0, 360]]),
+        #     ("Cuello", [[0, 360], [0, 360]]),
+        #     ("Cadera R", [[0, 360], [0, 360]]),
+        # ]
+
+        self.optimal_ranges = [
+        ("Pelvis", [[0, 360], [0, 360]]),
+        ("Cuello", [[0, 360], [0, 360]]),
+        ("Cadera R", [[0, 360], [0, 360]]),
+        ("Rodilla R", [[0, 360], [0, 360]]),
+        ("Tobillo R", [[0, 360], [0, 360]]),
+        ("Cadera L", [[0, 360], [0, 360]]),
+        ("Rodilla L", [[0, 360], [0, 360]]),
+        ("Tobillo L", [[0, 360], [0, 360]]),
+        ("Hombro R", [[0, 360], [0, 360]]),
+        ("Codo R", [[0, 360], [0, 360]]),
+        ("Muñeca R", [[0, 360], [0, 360]]),
+        ("Hombro L", [[0, 360], [0, 360]]),
+        ("Codo L", [[0, 360], [0, 360]]),
+        ("Muñeca L", [[0, 360], [0, 360]])
+        ]
+
+
+        #Dividimos el rango en dos
+        mitad1 = self.optimal_ranges[:len(self.optimal_ranges)//2]
+        mitad2 = self.optimal_ranges[len(self.optimal_ranges)//2:]
+
+        #Creamos los conjuntos de graficas
+        self.fig,axes = plt.subplots(
+            nrows=max(len(mitad1), len(mitad2)),
+            ncols=4,
+            figsize=(12, len(mitad1) * 0.6),
+            dpi=120
+        )
+
+
+        #Dibujamos los rangos
+        self.line_refs = {}
+
+        for row, data in enumerate(mitad1):
+            name, (range1, range2) = data
+            self.line_refs[(name, 0)] = self.draw_range_bar(axes[row, 0], f"Min: {name}", range1)
+            self.line_refs[(name, 1)] = self.draw_range_bar(axes[row, 1], f"Max: {name}", range2)
+
+        for row, data in enumerate(mitad2):
+            name, (range1, range2) = data
+            self.line_refs[(name, 0, 'R')] = self.draw_range_bar(axes[row, 2], f"Min: {name}", range1)
+            self.line_refs[(name, 1, 'R')] = self.draw_range_bar(axes[row, 3], f"Max: {name}", range2)
+
+        plt.tight_layout()
+
+        #Añadimos la grafica al layout
+        self.canvas = FigureCanvas(self.fig)
+        main_vlayout.addWidget(self.canvas)
+
+        # ===== Parte inferior: dos casillas =====
+        bottom_layout = QGridLayout()
+        main_vlayout.addLayout(bottom_layout)
+
+        # Creamos una grafica
+        self.grafica_L = pg.PlotWidget(title="Trayectoria Derecha")
+        self.grafica_L.setFixedHeight(int(self.height() / 3))
+        self.grafica_L.setAspectLocked(True)
+        bottom_layout.addWidget(self.grafica_L, 0, 0)
+
+        self.grafica_R = pg.PlotWidget(title="Trayectoria Izquierda")
+        self.grafica_R.setFixedHeight(int(self.height() / 3))
+        self.grafica_R.setAspectLocked(True)
+        bottom_layout.addWidget(self.grafica_R, 0, 1)
+
+        #Seteamos los limites TODO: Cambiar los rangos por los necesarios
+        self.grafica_L.setLimits(xMin=0, xMax=100, yMin=0, yMax=100)
+        self.grafica_R.setLimits(xMin=0, xMax=100, yMin=0, yMax=100)
+
+        # Botón abajo
+        boton = QPushButton("Reiniciar")
+        main_vlayout.addWidget(boton)
+        boton.clicked.connect(self.reiniciar_datos)
+
+        #Creamos un reloj de actualización
+        self.timer = QTimer()
+        self.timer.timeout.connect(self.update_trayectorias)
+        self.timer.timeout.connect(self.update_bars)
+        self.timer.start(1000)
+
+    def reiniciar_datos(self):
+        """Funcion que usamos para reiniciar todos los valores"""
+
+        #Reiniciamos los maximos y minimos de los angulos
+        #TODO:
+
+        #Reiniciamos las trayectorias
+        self.main_window.valores_grafica_L = [[[],[]],[[],[]]]
+        self.main_window.valores_grafica_R = [[[],[]],[[],[]]]
+
+    def update_trayectorias(self):
+        """Actualiza las trayectorias de los gráficos."""
+
+        #Obtenemos los valores
+        valores_L = self.main_window.valores_grafica_L
+        valores_R = self.main_window.valores_grafica_R
+
+        #Actualizmos la trayectoria derecha
+        self.grafica_R.clear()
+        self.grafica_R.plot(valores_R[0][0], valores_R[0][1], pen="r", name="Rodilla")
+        self.grafica_R.plot(valores_R[1][0], valores_R[1][1], pen="g", name="Tobillo")
+        self.grafica_R.addLegend()
+
+        #Actualizamos la trayectoria izquierda
+        self.grafica_L.clear()
+        self.grafica_L.plot(valores_L[0][0], valores_L[0][1], pen="r", name="Rodilla")
+        self.grafica_L.plot(valores_L[1][0], valores_L[1][1], pen="g", name="Tobillo")
+        self.grafica_L.addLegend()
+
+
+    def draw_range_bar(self, ax, name, range_values):
+        """Dibuja una barra de rango en el gráfico."""
+        start, end = range_values
+        mid = (start + end) / 2
+        values = np.linspace(start, end, 300)
+        colors = []
+        for val in values:
+            dist = abs(val - mid) / ((end - start) / 2)
+            green = max(0, 1 - dist)
+            red = 1 - green
+            colors.append((red, green, 0))
+        ax.imshow([colors], extent=[start, end, 0, 1], aspect='auto')
+        ax.set_yticks([])
+        ax.set_xticks([start, mid, end])
+        ax.set_xticklabels([f"{start}°", f"{mid:.1f}°", f"{end}°"], fontsize=7)
+        ax.set_xlim(start, end)
+        ax.set_title(name, fontsize=8)
+        return ax.axvline(start - 1, color='black', linewidth=2)
+
+    def update_bars(self):
+        """Funcion que usamos para actualizar todos los valores"""
+
+        # Actualizamos los valores de las barras de rango
+        for key,line in self.line_refs.items():
+
+            #Lado Izquierdo
+            if len(key) == 2:
+                name, col = key
+                start, end = self.optimal_ranges[[n for n, _ in self.optimal_ranges].index(name)][1][col]
+
+            #Lado Derecho
+            else:
+                name, col, _ = key
+                start, end = self.optimal_ranges[[n for n, _ in self.optimal_ranges].index(name)][1][col]
+
+            #Obtenemos el nuevo valor de angulo
+            if col == 0:  # Minimo
+                new_value = self.main_window.angles_joints[name][0] #TODO: Cambiar por 1 cuando este implementado
+            else:  # Maximo
+                new_value = self.main_window.angles_joints[name][0] #TODO: Cambiar por 2 cuando este implementado
+
+            line.set_xdata([new_value])
+        self.fig.canvas.draw_idle()
+
+
+def update_trayectoria_test(window: BiomecanicaUI):
+    """Funcion que usamos para calcular la trayectoria de prueba"""
+
+    # Limpiamos las trayectorias anteriores
+    window.valores_grafica_L = [[[], []], [[], []]]
+    window.valores_grafica_R = [[[], []], [[], []]]
+
+    #Obtenemos un radio aleatorio para cada una de las graficas
+    radio1 = np.random.uniform(1, 10)
+    radio2 = np.random.uniform(1, 10)
+    radio3 = np.random.uniform(1, 10)
+    radio4 = np.random.uniform(1, 10)
+
+    # Generamos nuevos datos de prueba
+    for i in range(0,360,15):
+        i = np.radians(i)  # Convertir a radianes
+
+        # Creamos una elipse con centro en (2, 4)
+        window.valores_grafica_L[0][0].append(radio1*np.cos(i) + 20)
+        window.valores_grafica_L[0][1].append(radio1*np.sin(i) + 40)
+
+        window.valores_grafica_L[1][0].append(radio2*np.cos(i) + 20)
+        window.valores_grafica_L[1][1].append(radio2*np.sin(i) + 60)
+
+        # Datos para la gráfica derecha
+        window.valores_grafica_R[0][0].append(radio3*np.cos(i) + 20)
+        window.valores_grafica_R[0][1].append(radio3*np.sin(i) + 40)
+
+        window.valores_grafica_R[1][0].append(radio4*np.cos(i) + 20)
+        window.valores_grafica_R[1][1].append(radio4*np.sin(i) + 60)
+
+    # Actualizamos las gráficas si la ventana de análisis está abierta
+    if window.analisis_window.isVisible():
+        window.analisis_window.update_trayectorias()
 
 
 def update_test_angles(window: BiomecanicaUI):
@@ -582,6 +815,7 @@ if __name__ == "__main__":
 
     timer = QTimer()
     timer.timeout.connect(lambda: update_test_angles(window))
+    timer.timeout.connect(lambda: update_trayectoria_test(window))
     timer.start(1000)
 
     sys.exit(app.exec_())
