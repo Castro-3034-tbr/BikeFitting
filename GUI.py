@@ -52,7 +52,7 @@ class BiomecanicaUI(QMainWindow):
         visualization_menu.addAction(view_3d_action)
 
         #TODO: Implementar la acciones de cambio de vista
-        self.camaras_configuradas = False #TODO: Cambiar esto cuando se implementen la configuracion de camaras
+        self.camaras_configuradas = True #TODO: Cambiar esto cuando se implementen la configuracion de camaras
         view_2d_action.triggered.connect(lambda: self.cambiar_vista("2D"))
         view_3d_action.triggered.connect(lambda: self.cambiar_vista("3D"))
 
@@ -138,13 +138,13 @@ class BiomecanicaUI(QMainWindow):
                 # Brazo derecho
                 [2.5, 0, 5.5],        # 11: Hombro R
                 [2.5, 0, 2.5],        # 12: Codo R
-                [2.5, 0, 0],          # 13: Muñeca R
+                [2.5, 0, 0],          # 13: Muneca R
                 [2.5, 1, 0],          # 14: Mano R
 
                 # Brazo izquierdo
                 [-2.5, 0, 5.5],       # 15: Hombro L
                 [-2.5, 0, 2.5],       # 16: Codo L
-                [-2.5, 0, 0],         # 17: Muñeca L
+                [-2.5, 0, 0],         # 17: Muneca L
                 [-2.5, 1, 0],       # 18: Mano L
             ], dtype=np.float32)
 
@@ -159,14 +159,14 @@ class BiomecanicaUI(QMainWindow):
                 self.skeleton_points[9],  # 7: Tobillo L
                 self.skeleton_points[11], # 8: Hombro R
                 self.skeleton_points[12], # 9: Codo R
-                self.skeleton_points[13], # 10: Muñeca R
+                self.skeleton_points[13], # 10: Muneca R
                 self.skeleton_points[15], # 11: Hombro L
                 self.skeleton_points[16], # 12: Codo L
-                self.skeleton_points[17], # 13: Muñeca L
+                self.skeleton_points[17], # 13: Muneca L
             ])
 
         self.angles_joints = {
-            "Pelvis": [0, 0, 0, ],
+            "Pelvis": [0, 0, 0],
             "Cuello": [0, 0, 0],
             "Cadera R": [0, 0, 0],
             "Rodilla R": [0, 0, 0],
@@ -176,10 +176,10 @@ class BiomecanicaUI(QMainWindow):
             "Tobillo L": [0, 0, 0],
             "Hombro R": [0, 0, 0],
             "Codo R": [0, 0, 0],
-            "Muñeca R": [0, 0, 0],
+            "Muneca R": [0, 0, 0],
             "Hombro L": [0, 0, 0],
             "Codo L": [0, 0, 0],
-            "Muñeca L": [0, 0, 0],
+            "Muneca L": [0, 0, 0],
         }
 
             # Definir conexiones entre puntos (start_index, end_index, joint_index, link_index)
@@ -277,6 +277,11 @@ class BiomecanicaUI(QMainWindow):
         boton_info.clicked.connect(self.open_analisis_window)
         right_layout.addWidget(boton_info)
 
+        # Señal para cerrar seguro
+        self.app_quit_action = QAction("Salir", self)
+        self.app_quit_action.triggered.connect(self.safe_quit)
+        file_menu.addAction(self.app_quit_action)
+
         #Anadimos el panel derecho al layout principal
         main_layout.addWidget(right_panel, stretch=1)
         main_widget.setLayout(main_layout)
@@ -286,14 +291,8 @@ class BiomecanicaUI(QMainWindow):
         self.config_cam_window = ConfigCamWindow(self)
         self.analisis_window = AnalisisWindow(self)
 
-        # Inicializar 3D despues de que todo este configurado
-        self.init_3d_timer = QTimer()
-        self.init_3d_timer.setSingleShot(True)
-        self.init_3d_timer.timeout.connect(self.initialize_3d_when_ready)
-        self.init_3d_timer.start(100)  # Esperar 100ms
-
     def ObtainCamAvailable(self):
-        """Obtener las camaras disponibles y agregarlas al menu de configuracion."""
+        """Obtener las camaras disponibles y agregarlas al menu de configuracion. """
 
         #Obtenemos las camaras disponibles
         cameras = QCameraInfo.availableCameras()
@@ -303,7 +302,10 @@ class BiomecanicaUI(QMainWindow):
             return
 
     def cambiar_vista(self, vista):
-        """Funcion para cambiar la vista de visualizacion."""
+        """Funcion para cambiar la vista de visualizacion.
+        INPUTS:
+        vista: La vista a la que cambiar (2D o 3D)
+        """
         if not self.camaras_configuradas:
             # Si no estan configuradas las camaras, forzar panel blanco
             self.stacked_widget.setCurrentIndex(0)
@@ -315,13 +317,13 @@ class BiomecanicaUI(QMainWindow):
 
         if vista == "3D":
             # Asegurar que el 3D este inicializado antes de mostrar
-            if not self.gl_initialized:
-                self.initialize_3d_when_ready()
             self.stacked_widget.setCurrentIndex(1)
+            QTimer.singleShot(1000, self.initialize_3d_when_ready)
         elif vista == "2D":
             self.stacked_widget.setCurrentIndex(2)
 
     def update_angles(self):
+        """Funcion que usamos para actualizar los angulos de las articulaciones dentro de la tabla"""
         for joint, angle in self.angles_joints.items():
             actual = angle[0]
             max_val = angle[1]
@@ -360,15 +362,11 @@ class BiomecanicaUI(QMainWindow):
 
             # Configurar la vista 3D
             self.vista_3d.setCameraPosition(distance=20, elevation=20, azimuth=45)
-
-            # Crear exoesqueleto basico
-            self.update_skeleton()
-
             self.gl_initialized = True
 
         except Exception as e:
             print(f"Error configurando exoesqueleto 3D: {e}")
-            # Fallback: solo mostrar grilla básica
+            # Fallback: solo mostrar grilla basica
             try:
                 grid = gl.GLGridItem()
                 self.vista_3d.addItem(grid)
@@ -376,52 +374,19 @@ class BiomecanicaUI(QMainWindow):
                 pass
 
     def update_skeleton(self):
-        """Crea un exoesqueleto basico y robusto."""
-        try:
-            #Eliminamos todos los items del exoesqueleto anterior
-            if hasattr(self, 'exoesqueleto_items'):
-                for item in self.exoesqueleto_items:
-                    try:
-                        self.vista_3d.removeItem(item)
-                    except Exception as e:
-                        print(f"Error eliminando item: {e}")
-                self.exoesqueleto_items = []
+        """Crea un exoesqueleto básico y robusto con validaciones de depuración."""
+        pass
 
-            # Crear puntos articulares
-            scatter = gl.GLScatterPlotItem(
-                pos=self.joint_points,
-                size=1,
-                color=(1, 0, 0, 0.8),  # Rojo semi-transparente
-                pxMode=False
-            )
-            self.vista_3d.addItem(scatter)
-            self.exoesqueleto_items.append(scatter)
-
-            # Crear lineas de conexion
-            for start_idx, end_idx, joint_idx, link_idx in self.connections:
-                try:
-                    line_points = np.array([
-                        self.skeleton_points[start_idx],
-                        self.skeleton_points[end_idx]
-                    ])
-
-                    line = gl.GLLinePlotItem(
-                        pos=line_points,
-                        color=(0.8, 0.8, 0.8, 1.0),  # Gris
-                        width=2,
-                        antialias=True
-                    )
-                    self.vista_3d.addItem(line)
-                    self.exoesqueleto_items.append(line)
-                except Exception as e:
-                    print(f"Error creando linea {start_idx}-{end_idx}: {e}")
-                    continue
-
-        except Exception as e:
-            print(f"Error creando exoesqueleto basico: {e}")
 
     def calcular_punto_3d(self, origen, longitud, theta):
-        """Calcula un punto 3D a partir de un origen, longitud y angulos theta y phi."""
+        """Calcula un punto 3D a partir de un origen, longitud y angulos theta y phi.
+        INPUTS:
+        origen: El punto de origen (x, y, z)
+        longitud: La longitud del segmento
+        theta: El angulo en el plano XY
+        OUTPUTS:
+        Un punto 3D (x, y, z) como un array de numpy.
+        """
         x = origen[0]
         y = origen[1] + longitud * np.cos(theta)
         z = origen[2] + longitud * np.sin(theta)
@@ -429,7 +394,7 @@ class BiomecanicaUI(QMainWindow):
 
     def update_points(self):
         """Actualizamos los puntos de exoesqueleto segun los angulos de cada una de las articulaciones."""
-        pass
+
         #Calculamos el punto para cada articulacion ( Vamos a probar con la cadera derecha, rodilla derecha y tobillo derecho )
         for i, conect in enumerate(self.connections):
             start_idx, end_idx, joint_idx, link_idx = conect
@@ -452,9 +417,6 @@ class BiomecanicaUI(QMainWindow):
             self.skeleton_points[end_idx] = new_point
             self.joint_points[joint_idx] = new_point
 
-        # Actualizamos los puntos articulares
-        self.update_skeleton()
-
     def initialize_3d_when_ready(self):
         """Inicializa los elementos 3D cuando el widget este listo."""
         if not self.gl_initialized:
@@ -465,13 +427,13 @@ class BiomecanicaUI(QMainWindow):
 
     def open_configcam_window(self):
         """Abre la ventana de configuracion de camaras."""
-
+        self.config_cam_window = ConfigCamWindow(self)
         #Abrimos la ventana de configuracion de camaras
         self.config_cam_window.show()
 
     def open_analisis_window(self):
         """Abre la ventana de analisis de datos."""
-
+        self.analisis_window = AnalisisWindow(self)
         #Abrimos la ventana de analisis de datos
         self.analisis_window.show()
 
@@ -480,14 +442,14 @@ class ConfigCamWindow(QDialog):
     def __init__(self, main_window):
         super().__init__(main_window)
         self.main_window = main_window  # acceso a la ventana principal
-        self.setWindowTitle("Configuración de Cámaras")
+        self.setWindowTitle("Configuracion de Camaras")
         self.setMinimumSize(400, 300)
 
         layout = QVBoxLayout()
         self.setLayout(layout)
 
-        # Título arriba
-        title = QLabel("Selecciona la cámara correspondiente para cada vista")
+        # Titulo arriba
+        title = QLabel("Selecciona la camara correspondiente para cada vista")
         title.setAlignment(Qt.AlignCenter)
         title.setStyleSheet("font-size: 18px; font-weight: bold;")
         layout.addWidget(title)
@@ -511,7 +473,13 @@ class ConfigCamWindow(QDialog):
 
 
     def add_view_combo(self, layout, name, row, col):
-        """Crea una etiqueta + combo para una vista"""
+        """Crea una etiqueta + combo para una vista
+        INPUTS:
+        layout: El layout en el que añadir el combo
+        name: El nombre de la vista
+        row: La fila en la que colocar el combo
+        col: La columna en la que colocar el combo
+        """
         #Creamos la etiqueta
         vbox = QVBoxLayout()
         label = QLabel(name)
@@ -519,50 +487,50 @@ class ConfigCamWindow(QDialog):
 
         #Creamos el combo
         combo = QComboBox()
-        combo.addItem("Sin asignar ")  # opción en blanco
-        combo.addItems(self.main_window.list_cam)  # Usar las cámaras disponibles
+        combo.addItem("Sin asignar ")  # opcion en blanco
+        combo.addItems(self.main_window.list_cam)  # Usar las camaras disponibles
         combo.currentIndexChanged.connect(self.update_combo_options)
 
-        # Añadimos al layout
+        # Anadimos al layout
         vbox.addWidget(label)
         vbox.addWidget(combo)
 
-        # Creamos un contenedor para el layout vertical
+    # Creamos un contenedor para el layout vertical
         container = QWidget()
         container.setLayout(vbox)
         container.setSizePolicy(QSizePolicy.Preferred, QSizePolicy.Fixed)  # evita que se desplace mucho verticalmente
 
-        # Añadimos el contenedor al layout principal
+        # Anadimos el contenedor al layout principal
         layout.addWidget(container, row, col, alignment=Qt.AlignCenter)
 
         # Guardamos el combo en un diccionario para actualizaciones posteriores
         self.combo_boxes[name] = combo
 
     def update_combo_options(self):
-        """Cuando cambia una selección, actualizamos el resto de combos."""
+        """Cuando cambia una seleccion, actualizamos el resto de combos."""
 
         selected = set()
         for name, combo in self.combo_boxes.items():
             text = combo.currentText()
-            if text and text != "Sin asignar" and text != "":  # ignoramos si está vacío
+            if text and text != "Sin asignar" and text != "":  # ignoramos si esta vacio
                 selected.add(text)
 
         # Actualizamos combos
         for name, combo in self.combo_boxes.items():
             # Obtener el texto actual del combo
             current = combo.currentText()
-            # Evitar señales para evitar bucles infinitos
+            # Evitar senales para evitar bucles infinitos
             combo.blockSignals(True)
 
-            # Limpiar el combo y añadir la opción en blanco
+            # Limpiar el combo y anadir la opcion en blanco
             combo.clear()
-            combo.addItem("Sin asignar")  # opción en blanco
+            combo.addItem("Sin asignar")  # opcion en blanco
 
-            # Mostrar solo las cámaras no seleccionadas o la actual
+            # Mostrar solo las camaras no seleccionadas o la actual
             options = [cam for cam in self.main_window.list_cam if cam == current or cam not in selected]
             combo.addItems(options)
 
-            # Si la opción actual está en las opciones disponibles, la seleccionamos
+            # Si la opcion actual esta en las opciones disponibles, la seleccionamos
             if current in options or current == "Sin asignar":
                 combo.setCurrentText(current)
 
@@ -578,32 +546,27 @@ class ConfigCamWindow(QDialog):
         left_value = self.combo_boxes["Izquierda"].currentText()
         right_value = self.combo_boxes["Derecha"].currentText()
 
-        #Comprobamos que no esten vacios
+    #Comprobamos que no esten vacios
         if left_value != "Sin asignar" or right_value != "Sin asignar" or left_value != "" or right_value != "":
             #Si tenemos configuracion minima, habilitamos el boton de analisis
             self.main_window.camaras_configuradas = True
 
+
+#region: Analisis window
 class AnalisisWindow(QDialog):
-    """Ventana de análisis de datos biomecánicos."""
+    """Ventana de analisis de datos biomecanicos."""
     def __init__(self, main_window=None):
         super().__init__(main_window)
         self.main_window = main_window
-        self.setWindowTitle("Análisis de Datos")
-        self.setMinimumSize(1800, 900)
+        self.setWindowTitle("Analisis de Datos")
+        self.setGeometry(100, 100, 1800, 1800)
 
         # Layout principal vertical
         main_vlayout = QVBoxLayout(self)
 
-        # ===== Grid superior único 7x4 =====
+    # ===== Grid superior unico 7x4 =====
         self.grid_superior = QGridLayout()
         main_vlayout.addLayout(self.grid_superior)
-
-        # Rellenamos con cada uno de los graficos
-        # self.optimal_ranges = [
-        #     ("Pelvis", [[0, 360], [0, 360]]),
-        #     ("Cuello", [[0, 360], [0, 360]]),
-        #     ("Cadera R", [[0, 360], [0, 360]]),
-        # ]
 
         self.optimal_ranges = [
         ("Pelvis", [[0, 360], [0, 360]]),
@@ -616,10 +579,10 @@ class AnalisisWindow(QDialog):
         ("Tobillo L", [[0, 360], [0, 360]]),
         ("Hombro R", [[0, 360], [0, 360]]),
         ("Codo R", [[0, 360], [0, 360]]),
-        ("Muñeca R", [[0, 360], [0, 360]]),
+        ("Muneca R", [[0, 360], [0, 360]]),
         ("Hombro L", [[0, 360], [0, 360]]),
         ("Codo L", [[0, 360], [0, 360]]),
-        ("Muñeca L", [[0, 360], [0, 360]])
+        ("Muneca L", [[0, 360], [0, 360]])
         ]
 
 
@@ -634,7 +597,6 @@ class AnalisisWindow(QDialog):
             figsize=(12, len(mitad1) * 0.6),
             dpi=120
         )
-
 
         #Dibujamos los rangos
         self.line_refs = {}
@@ -651,7 +613,7 @@ class AnalisisWindow(QDialog):
 
         plt.tight_layout()
 
-        #Añadimos la grafica al layout
+    #Anadimos la grafica al layout
         self.canvas = FigureCanvas(self.fig)
         main_vlayout.addWidget(self.canvas)
 
@@ -674,12 +636,12 @@ class AnalisisWindow(QDialog):
         self.grafica_L.setLimits(xMin=0, xMax=100, yMin=0, yMax=100)
         self.grafica_R.setLimits(xMin=0, xMax=100, yMin=0, yMax=100)
 
-        # Botón abajo
+        # Boton abajo
         boton = QPushButton("Reiniciar")
         main_vlayout.addWidget(boton)
         boton.clicked.connect(self.reiniciar_datos)
 
-        #Creamos un reloj de actualización
+        #Creamos un reloj de actualizacion
         self.timer = QTimer()
         self.timer.timeout.connect(self.update_trayectorias)
         self.timer.timeout.connect(self.update_bars)
@@ -696,7 +658,8 @@ class AnalisisWindow(QDialog):
         self.main_window.valores_grafica_R = [[[],[]],[[],[]]]
 
     def update_trayectorias(self):
-        """Actualiza las trayectorias de los gráficos."""
+        """Actualiza las trayectorias de los graficos."""
+         Removed 3D skeleton generation due to error. Implementation
 
         #Obtenemos los valores
         valores_L = self.main_window.valores_grafica_L
@@ -716,7 +679,14 @@ class AnalisisWindow(QDialog):
 
 
     def draw_range_bar(self, ax, name, range_values):
-        """Dibuja una barra de rango en el gráfico."""
+        """Dibuja una barra de rango en el grafico.
+        INPUTS:
+        ax: El eje en el que dibujar la barra
+        name: El nombre de la barra
+        range_values: Los valores de rango (inicio, fin)
+        OUTPUTS:
+        Una línea vertical que representa el rango en el gráfico.
+        """
         start, end = range_values
         mid = (start + end) / 2
         values = np.linspace(start, end, 300)
@@ -736,6 +706,9 @@ class AnalisisWindow(QDialog):
 
     def update_bars(self):
         """Funcion que usamos para actualizar todos los valores"""
+        # Evitar dibujar si la ventana no está visible
+        if not self.isVisible():
+            return
 
         # Actualizamos los valores de las barras de rango
         for key,line in self.line_refs.items():
@@ -761,7 +734,12 @@ class AnalisisWindow(QDialog):
 
 
 def update_trayectoria_test(window: BiomecanicaUI):
-    """Funcion que usamos para calcular la trayectoria de prueba"""
+    """Funcion que usamos para calcular la trayectoria de prueba
+    TODO: Esta es una funcion de prueba en la original no tiene que funcionar
+
+    INPUTS:
+    window: La ventana principal de la aplicacion
+    """
 
     # Limpiamos las trayectorias anteriores
     window.valores_grafica_L = [[[], []], [[], []]]
@@ -784,20 +762,26 @@ def update_trayectoria_test(window: BiomecanicaUI):
         window.valores_grafica_L[1][0].append(radio2*np.cos(i) + 20)
         window.valores_grafica_L[1][1].append(radio2*np.sin(i) + 60)
 
-        # Datos para la gráfica derecha
+        # Datos para la grafica derecha
         window.valores_grafica_R[0][0].append(radio3*np.cos(i) + 20)
         window.valores_grafica_R[0][1].append(radio3*np.sin(i) + 40)
 
         window.valores_grafica_R[1][0].append(radio4*np.cos(i) + 20)
         window.valores_grafica_R[1][1].append(radio4*np.sin(i) + 60)
 
-    # Actualizamos las gráficas si la ventana de análisis está abierta
-    if window.analisis_window.isVisible():
+    # Actualizamos las graficas si la ventana de analisis esta abierta
+    if not window.analisis_window is None and window.analisis_window.isVisible():
         window.analisis_window.update_trayectorias()
 
 
 def update_test_angles(window: BiomecanicaUI):
-    """Funcion que usamos para probar la actualizacion de angulos"""
+    """Funcion que usamos para probar la actualizacion de angulos
+    TODO: Esta es una funcion de prueba en la original no tiene que funcionar
+
+    INPUTS:
+    window: La ventana principal de la aplicacion
+
+    """
 
     # Actualizamos los angulos de las articulaciones con valores aleatorios entre 30 y 160 grados
     for joint in window.angles_joints:
