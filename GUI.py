@@ -711,12 +711,12 @@ class AnalisisWindow(QDialog):
         ax.set_title(name, fontsize=8)
         return ax.axvline(start - 1, color='black', linewidth=2)
 
-    def update_bars(self):
+    def update_bars(self, forzar = False):
         """Funcion que usamos para actualizar todos los valores"""
         # Evitar dibujar si la ventana no está visible
         print("Actualizacion de barras holaa")
-        # if not self.isVisible():
-        #     return
+        if not self.isVisible() and not forzar:
+            return
 
         # Actualizamos los valores de las barras de rango
         for key,line in self.line_refs.items():
@@ -821,7 +821,7 @@ class ExportMenu(QDialog):
         #Obtenemos las graficas
         
         canvas_optimos = self.analisis_window.canvas
-        self.analisis_window.update_bars()
+        self.analisis_window.update_bars(forzar=True)  # Forzamos la actualizacion de las barras
         grafica_R = self.analisis_window.grafica_R
         grafica_L = self.analisis_window.grafica_L
 
