@@ -2,6 +2,7 @@ import sys
 import os
 import numpy as np
 import pyqtgraph as pg
+from pyqtgraph.exporters import ImageExporter
 
 # Configuracion para mejorar compatibilidad con OpenGL en Linux
 os.environ['QT_QPA_PLATFORM'] = 'xcb'  # Forzar X11 en lugar de Wayland
@@ -10,7 +11,7 @@ os.environ['PYOPENGL_PLATFORM'] = 'glx'
 from PyQt5.QtWidgets import (
     QApplication, QMainWindow, QWidget, QHBoxLayout, QVBoxLayout,
     QTableWidget, QTableWidgetItem, QMessageBox, QPushButton,
-    QLabel, QGridLayout, QStackedWidget, QSizePolicy, QDialog, QComboBox,
+    QLabel, QGridLayout, QStackedWidget, QSizePolicy, QDialog, QComboBox,QLineEdit
 )
 from PyQt5.QtCore import QTimer, Qt
 import pyqtgraph.opengl as gl
@@ -21,7 +22,7 @@ from PyQt5.QtGui import QPalette, QColor,QPixmap
 import matplotlib.pyplot as plt
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 
-import random
+from ExportPDF import crear_pdf
 
 #region: Main Window 
 class BiomecanicaUI(QMainWindow):
@@ -40,6 +41,7 @@ class BiomecanicaUI(QMainWindow):
         #Exportar datos
         export_action = QAction("Exportar Datos", self)
         file_menu.addAction(export_action)
+        export_action.triggered.connect(self.export_function)
 
         # Seleccion de vista
         visualization_group = QActionGroup(self)
@@ -78,11 +80,6 @@ class BiomecanicaUI(QMainWindow):
         conf_cam_menu = QAction("Configuracion de Camaras", self)
         conf_cam_menu.triggered.connect(self.open_configcam_window)
         config_menu.addAction(conf_cam_menu)
-
-        # Accion salir
-        exit_action = QAction("Salir", self)
-        exit_action.triggered.connect(self.close)
-        file_menu.addAction(exit_action)
 
         # Repo
         repo_action = QAction("Repositorio", self)
@@ -291,6 +288,12 @@ class BiomecanicaUI(QMainWindow):
         self.config_cam_window = ConfigCamWindow(self)
         self.analisis_window = AnalisisWindow(self)
 
+    def safe_quit(self):
+        """Cerrar la aplicación de forma segura."""
+        if self.analisis_window.isVisible():
+            self.analisis_window.close()
+        self.close()
+
     def ObtainCamAvailable(self):
         """Obtener las camaras disponibles y agregarlas al menu de configuracion. """
 
@@ -321,6 +324,11 @@ class BiomecanicaUI(QMainWindow):
             QTimer.singleShot(1000, self.initialize_3d_when_ready)
         elif vista == "2D":
             self.stacked_widget.setCurrentIndex(2)
+
+    def export_function(self):
+        """Abrimos la pagina de exportacion."""
+        self.export_menu = ExportMenu(self, self.analisis_window)
+        self.export_menu.exec_()
 
     def update_angles(self):
         """Funcion que usamos para actualizar los angulos de las articulaciones dentro de la tabla"""
@@ -460,7 +468,7 @@ class ConfigCamWindow(QDialog):
 
         # Imagen central
         self.image_label = QLabel()
-        self.image_label.setPixmap(QPixmap("./ImagenPrueba.jpg").scaled(300, 300, Qt.KeepAspectRatio))
+        self.image_label.setPixmap(QPixmap("./images/ImagenCofCam.jpg").scaled(300, 300, Qt.KeepAspectRatio))
         self.image_label.setAlignment(Qt.AlignCenter)
         center_layout.addWidget(self.image_label, 1, 1)
 
@@ -659,7 +667,6 @@ class AnalisisWindow(QDialog):
 
     def update_trayectorias(self):
         """Actualiza las trayectorias de los graficos."""
-         Removed 3D skeleton generation due to error. Implementation
 
         #Obtenemos los valores
         valores_L = self.main_window.valores_grafica_L
@@ -707,8 +714,9 @@ class AnalisisWindow(QDialog):
     def update_bars(self):
         """Funcion que usamos para actualizar todos los valores"""
         # Evitar dibujar si la ventana no está visible
-        if not self.isVisible():
-            return
+        print("Actualizacion de barras holaa")
+        # if not self.isVisible():
+        #     return
 
         # Actualizamos los valores de las barras de rango
         for key,line in self.line_refs.items():
@@ -731,6 +739,8 @@ class AnalisisWindow(QDialog):
 
             line.set_xdata([new_value])
         self.fig.canvas.draw_idle()
+
+        print("Actualizacion de barras")
 
 
 def update_trayectoria_test(window: BiomecanicaUI):
@@ -772,6 +782,83 @@ def update_trayectoria_test(window: BiomecanicaUI):
     # Actualizamos las graficas si la ventana de analisis esta abierta
     if not window.analisis_window is None and window.analisis_window.isVisible():
         window.analisis_window.update_trayectorias()
+
+
+class ExportMenu(QDialog):
+    """Clase que usamos para exportar los resultados del análisis."""
+    def __init__(self, main_window=None, analisis_window=None):
+        super().__init__()
+        self.main_window = main_window
+        self.analisis_window = analisis_window
+
+        self.setWindowTitle("Exportar Resultados")
+        self.setMinimumSize(300, 120)
+
+        # Layout vertical
+        layout = QVBoxLayout(self)
+
+        # Etiqueta y entrada de texto para nombre de usuario
+        layout.addWidget(QLabel("Nombre de usuario:"))
+        self.username_edit = QLineEdit()
+        layout.addWidget(self.username_edit)
+
+        # Botón para generar PDF
+        self.export_button = QPushButton("Generar PDF")
+        layout.addWidget(self.export_button)
+
+        # Conectar botón con función export_action
+        self.export_button.clicked.connect(self.export_action)
+
+    def export_action(self):
+        """Función que se usa para exportar el acto en curso."""
+
+        #Obtenemos el nombre de usuario
+        nombre_usuario = self.username_edit.text().strip()
+        if not nombre_usuario:
+            # Podrías agregar un QMessageBox para alertar que el nombre es obligatorio
+            print("Debe ingresar un nombre de usuario")
+            return
+
+        #Obtenemos las graficas
+        
+        canvas_optimos = self.analisis_window.canvas
+        self.analisis_window.update_bars()
+        grafica_R = self.analisis_window.grafica_R
+        grafica_L = self.analisis_window.grafica_L
+
+        #Actualizamos las graficas
+        self.analisis_window.update_trayectorias()
+
+        # Exportamos la grafica de rangos
+        canvas_optimos.print_png("./images/rangos_optimos.png")
+
+        #Exportamos las trayectorias
+        grafica_L.setXRange(0, 100)     # Rango X deseado
+        grafica_L.setYRange(0, 100)     # Rango Y deseado
+        grafica_L.enableAutoRange(axis='x', enable=False)
+        grafica_L.enableAutoRange(axis='y', enable=False)
+
+        grafica_R.setXRange(0, 100)     # Rango X deseado
+        grafica_R.setYRange(0, 100)     # Rango Y deseado
+        grafica_R.enableAutoRange(axis='x', enable=False)
+        grafica_R.enableAutoRange(axis='y', enable=False)
+
+        # Exportar imagen
+
+        plot_item_L = grafica_L.getPlotItem()
+        exporter_L = ImageExporter(plot_item_L)
+        exporter_L.export("./images/grafica_L.png")
+
+        plot_item_R = grafica_R.getPlotItem()
+        exporter_R = ImageExporter(plot_item_R)
+        exporter_R.export("./images/grafica_R.png")
+
+        # Llamar a la función crear_pdf con los datos necesarios
+        crear_pdf(nombre_usuario, self.main_window.angles_joints)
+        print(f"PDF generado para usuario: {nombre_usuario}")
+
+        #Cerramos la ventana de exportación
+        self.close()
 
 
 def update_test_angles(window: BiomecanicaUI):
