@@ -205,3 +205,10 @@ cython_debug/
 marimo/_static/
 marimo/_lsp/
 __marimo__/
+
+.trunk/
+pdf/*
+!pdf/.gitkeep
+images/*
+!images/ImagenCofCam.jpg
+!images/logo.png
