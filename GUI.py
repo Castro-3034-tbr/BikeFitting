@@ -740,7 +740,6 @@ class AnalisisWindow(QDialog):
             line.set_xdata([new_value])
         self.fig.canvas.draw_idle()
 
-        print("Actualizacion de barras")
 
 
 def update_trayectoria_test(window: BiomecanicaUI):
