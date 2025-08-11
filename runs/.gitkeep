@@ -1,0 +1,8 @@
+# Carpetas que queremos añadir al repositorio
+# Estas carpetas deben contener archivos que no estén en .gitignore
+# y que no estén vacías.
+# Si una carpeta está vacía, Git no la añadirá al repositorio.
+# Para mantener la carpeta vacía, se puede añadir un archivo .gitkeep dentro de ella
+# para que Git la reconozca.
+# Aquí se puede añadir el nombre de la carpeta que se quiere añadir al repositorio.
+# Por ejemplo, si queremos añadir la carpeta "test", podemos añadirla aquí.
