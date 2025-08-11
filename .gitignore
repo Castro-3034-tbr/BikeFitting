@@ -207,8 +207,9 @@ marimo/_lsp/
 __marimo__/
 
 .trunk/
+.vscode/
 pdf/*
 !pdf/.gitkeep
-images/*
-!images/ImagenCofCam.jpg
-!images/logo.png
+.images/*
+!.images/ImagenCofCam.jpg
+!.images/logo.png
