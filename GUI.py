@@ -289,13 +289,25 @@ class BiomecanicaUI(QMainWindow):
         self.analisis_window = AnalisisWindow(self)
 
     def safe_quit(self):
-        """Cerrar la aplicación de forma segura."""
+        """
+        Cierra la aplicación de forma segura.
+
+        Si la ventana de análisis está visible, la cierra antes de cerrar la aplicación principal.
+
+        Returns:
+            None
+        """
         if self.analisis_window.isVisible():
             self.analisis_window.close()
         self.close()
 
     def ObtainCamAvailable(self):
-        """Obtener las camaras disponibles y agregarlas al menu de configuracion. """
+        """
+        Obtiene las cámaras disponibles y las agrega al menú de configuración.
+
+        Returns:
+            None
+        """
 
         #Obtenemos las camaras disponibles
         cameras = QCameraInfo.availableCameras()
@@ -305,9 +317,14 @@ class BiomecanicaUI(QMainWindow):
             return
 
     def cambiar_vista(self, vista):
-        """Funcion para cambiar la vista de visualizacion.
-        INPUTS:
-        vista: La vista a la que cambiar (2D o 3D)
+        """
+        Cambia la vista de visualización.
+
+        Args:
+            vista (str): La vista a la que cambiar ("2D" o "3D").
+
+        Returns:
+            None
         """
         if not self.camaras_configuradas:
             # Si no estan configuradas las camaras, forzar panel blanco
@@ -326,12 +343,22 @@ class BiomecanicaUI(QMainWindow):
             self.stacked_widget.setCurrentIndex(2)
 
     def export_function(self):
-        """Abrimos la pagina de exportacion."""
+        """
+        Abre la página de exportación de resultados.
+
+        Returns:
+            None
+        """
         self.export_menu = ExportMenu(self, self.analisis_window)
         self.export_menu.exec_()
 
     def update_angles(self):
-        """Funcion que usamos para actualizar los angulos de las articulaciones dentro de la tabla"""
+        """
+        Actualiza los ángulos de las articulaciones en la tabla.
+
+        Returns:
+            None
+        """
         for joint, angle in self.angles_joints.items():
             actual = angle[0]
             max_val = angle[1]
@@ -351,7 +378,12 @@ class BiomecanicaUI(QMainWindow):
         self.table.resizeRowsToContents()
 
     def config_exoesqueleto(self):
-        """Funcion que se usa para configurar el exoesqueleto de forma segura."""
+        """
+        Configura el exoesqueleto 3D de forma segura.
+
+        Returns:
+            None
+        """
         try:
             # Limpiar elementos anteriores si existen
             if hasattr(self, 'exoesqueleto_items'):
@@ -382,18 +414,26 @@ class BiomecanicaUI(QMainWindow):
                 pass
 
     def update_skeleton(self):
-        """Crea un exoesqueleto básico y robusto con validaciones de depuración."""
+        """
+        Crea un exoesqueleto básico y robusto con validaciones de depuración.
+
+        Returns:
+            None
+        """
         pass
 
 
     def calcular_punto_3d(self, origen, longitud, theta):
-        """Calcula un punto 3D a partir de un origen, longitud y angulos theta y phi.
-        INPUTS:
-        origen: El punto de origen (x, y, z)
-        longitud: La longitud del segmento
-        theta: El angulo en el plano XY
-        OUTPUTS:
-        Un punto 3D (x, y, z) como un array de numpy.
+        """
+        Calcula un punto 3D a partir de un origen, longitud y ángulo theta.
+
+        Args:
+            origen (np.ndarray): El punto de origen (x, y, z).
+            longitud (float): La longitud del segmento.
+            theta (float): El ángulo en el plano XY.
+
+        Returns:
+            np.ndarray: Un array numpy con el punto 3D (x, y, z).
         """
         x = origen[0]
         y = origen[1] + longitud * np.cos(theta)
@@ -401,7 +441,12 @@ class BiomecanicaUI(QMainWindow):
         return np.array([x, y, z], dtype=np.float32)
 
     def update_points(self):
-        """Actualizamos los puntos de exoesqueleto segun los angulos de cada una de las articulaciones."""
+        """
+        Actualiza los puntos del exoesqueleto según los ángulos de las articulaciones.
+
+        Returns:
+            None
+        """
 
         #Calculamos el punto para cada articulacion ( Vamos a probar con la cadera derecha, rodilla derecha y tobillo derecho )
         for i, conect in enumerate(self.connections):
@@ -426,7 +471,12 @@ class BiomecanicaUI(QMainWindow):
             self.joint_points[joint_idx] = new_point
 
     def initialize_3d_when_ready(self):
-        """Inicializa los elementos 3D cuando el widget este listo."""
+        """
+        Inicializa los elementos 3D cuando el widget está listo.
+
+        Returns:
+            None
+        """
         if not self.gl_initialized:
             try:
                 self.config_exoesqueleto()
@@ -434,13 +484,23 @@ class BiomecanicaUI(QMainWindow):
                 print(f"Error en inicializacion 3D: {e}")
 
     def open_configcam_window(self):
-        """Abre la ventana de configuracion de camaras."""
+        """
+        Abre la ventana de configuración de cámaras.
+
+        Returns:
+            None
+        """
         self.config_cam_window = ConfigCamWindow(self)
         #Abrimos la ventana de configuracion de camaras
         self.config_cam_window.show()
 
     def open_analisis_window(self):
-        """Abre la ventana de analisis de datos."""
+        """
+        Abre la ventana de análisis de datos biomecánicos.
+
+        Returns:
+            None
+        """
         self.analisis_window = AnalisisWindow(self)
         #Abrimos la ventana de analisis de datos
         self.analisis_window.show()
@@ -481,12 +541,17 @@ class ConfigCamWindow(QDialog):
 
 
     def add_view_combo(self, layout, name, row, col):
-        """Crea una etiqueta + combo para una vista
-        INPUTS:
-        layout: El layout en el que añadir el combo
-        name: El nombre de la vista
-        row: La fila en la que colocar el combo
-        col: La columna en la que colocar el combo
+        """
+        Crea una etiqueta y combo para una vista específica.
+
+        Args:
+            layout (QLayout): Layout donde se añade el combo.
+            name (str): Nombre de la vista.
+            row (int): Fila donde colocar el combo.
+            col (int): Columna donde colocar el combo.
+
+        Returns:
+            None
         """
         #Creamos la etiqueta
         vbox = QVBoxLayout()
@@ -515,7 +580,12 @@ class ConfigCamWindow(QDialog):
         self.combo_boxes[name] = combo
 
     def update_combo_options(self):
-        """Cuando cambia una seleccion, actualizamos el resto de combos."""
+        """
+        Actualiza las opciones de los combos cuando cambia una selección.
+
+        Returns:
+            None
+        """
 
         selected = set()
         for name, combo in self.combo_boxes.items():
@@ -548,7 +618,12 @@ class ConfigCamWindow(QDialog):
         self.check_config()
 
     def check_config(self):
-        """Verifica que tenemos la configuracion necesaria de camaras para iniciar el analisis."""
+        """
+        Verifica que la configuración mínima de cámaras está lista para iniciar el análisis.
+
+        Returns:
+            None
+        """
 
         #Obtenemos el valor de los boxes izquierdos y derechos
         left_value = self.combo_boxes["Izquierda"].currentText()
@@ -656,7 +731,12 @@ class AnalisisWindow(QDialog):
         self.timer.start(1000)
 
     def reiniciar_datos(self):
-        """Funcion que usamos para reiniciar todos los valores"""
+        """
+        Reinicia todos los valores y trayectorias de la ventana de análisis.
+
+        Returns:
+            None
+        """
 
         #Reiniciamos los maximos y minimos de los angulos
         #TODO:
@@ -666,7 +746,12 @@ class AnalisisWindow(QDialog):
         self.main_window.valores_grafica_R = [[[],[]],[[],[]]]
 
     def update_trayectorias(self):
-        """Actualiza las trayectorias de los graficos."""
+        """
+        Actualiza las trayectorias de los gráficos de la ventana de análisis.
+
+        Returns:
+            None
+        """
 
         #Obtenemos los valores
         valores_L = self.main_window.valores_grafica_L
@@ -686,13 +771,16 @@ class AnalisisWindow(QDialog):
 
 
     def draw_range_bar(self, ax, name, range_values):
-        """Dibuja una barra de rango en el grafico.
-        INPUTS:
-        ax: El eje en el que dibujar la barra
-        name: El nombre de la barra
-        range_values: Los valores de rango (inicio, fin)
-        OUTPUTS:
-        Una línea vertical que representa el rango en el gráfico.
+        """
+        Dibuja una barra de rango en el gráfico.
+
+        Args:
+            ax (matplotlib.axes.Axes): Eje en el que dibujar la barra.
+            name (str): Nombre de la barra.
+            range_values (list): Valores de rango (inicio, fin).
+
+        Returns:
+            matplotlib.lines.Line2D: Línea vertical que representa el rango en el gráfico.
         """
         start, end = range_values
         mid = (start + end) / 2
@@ -712,9 +800,16 @@ class AnalisisWindow(QDialog):
         return ax.axvline(start - 1, color='black', linewidth=2)
 
     def update_bars(self, forzar = False):
-        """Funcion que usamos para actualizar todos los valores"""
+        """
+        Actualiza todos los valores de las barras de rango.
+
+        Args:
+            forzar (bool): Si es True, fuerza la actualización aunque la ventana no esté visible.
+
+        Returns:
+            None
+        """
         # Evitar dibujar si la ventana no está visible
-        print("Actualizacion de barras holaa")
         if not self.isVisible() and not forzar:
             return
 
@@ -739,49 +834,6 @@ class AnalisisWindow(QDialog):
 
             line.set_xdata([new_value])
         self.fig.canvas.draw_idle()
-
-
-
-def update_trayectoria_test(window: BiomecanicaUI):
-    """Funcion que usamos para calcular la trayectoria de prueba
-    TODO: Esta es una funcion de prueba en la original no tiene que funcionar
-
-    INPUTS:
-    window: La ventana principal de la aplicacion
-    """
-
-    # Limpiamos las trayectorias anteriores
-    window.valores_grafica_L = [[[], []], [[], []]]
-    window.valores_grafica_R = [[[], []], [[], []]]
-
-    #Obtenemos un radio aleatorio para cada una de las graficas
-    radio1 = np.random.uniform(1, 10)
-    radio2 = np.random.uniform(1, 10)
-    radio3 = np.random.uniform(1, 10)
-    radio4 = np.random.uniform(1, 10)
-
-    # Generamos nuevos datos de prueba
-    for i in range(0,360,15):
-        i = np.radians(i)  # Convertir a radianes
-
-        # Creamos una elipse con centro en (2, 4)
-        window.valores_grafica_L[0][0].append(radio1*np.cos(i) + 20)
-        window.valores_grafica_L[0][1].append(radio1*np.sin(i) + 40)
-
-        window.valores_grafica_L[1][0].append(radio2*np.cos(i) + 20)
-        window.valores_grafica_L[1][1].append(radio2*np.sin(i) + 60)
-
-        # Datos para la grafica derecha
-        window.valores_grafica_R[0][0].append(radio3*np.cos(i) + 20)
-        window.valores_grafica_R[0][1].append(radio3*np.sin(i) + 40)
-
-        window.valores_grafica_R[1][0].append(radio4*np.cos(i) + 20)
-        window.valores_grafica_R[1][1].append(radio4*np.sin(i) + 60)
-
-    # Actualizamos las graficas si la ventana de analisis esta abierta
-    if not window.analisis_window is None and window.analisis_window.isVisible():
-        window.analisis_window.update_trayectorias()
-
 
 class ExportMenu(QDialog):
     """Clase que usamos para exportar los resultados del análisis."""
@@ -809,7 +861,12 @@ class ExportMenu(QDialog):
         self.export_button.clicked.connect(self.export_action)
 
     def export_action(self):
-        """Función que se usa para exportar el acto en curso."""
+        """
+        Exporta los resultados actuales a PDF.
+
+        Returns:
+            None
+        """
 
         #Obtenemos el nombre de usuario
         nombre_usuario = self.username_edit.text().strip()
@@ -858,34 +915,3 @@ class ExportMenu(QDialog):
 
         #Cerramos la ventana de exportación
         self.close()
-
-
-def update_test_angles(window: BiomecanicaUI):
-    """Funcion que usamos para probar la actualizacion de angulos
-    TODO: Esta es una funcion de prueba en la original no tiene que funcionar
-
-    INPUTS:
-    window: La ventana principal de la aplicacion
-
-    """
-
-    # Actualizamos los angulos de las articulaciones con valores aleatorios entre 30 y 160 grados
-    for joint in window.angles_joints:
-        new_angle = np.random.uniform(30, 160)
-        window.angles_joints[joint][0] = new_angle
-
-    window.update_angles()
-    window.update_points()
-
-
-if __name__ == "__main__":
-    app = QApplication(sys.argv)
-    window = BiomecanicaUI()
-    window.show()
-
-    timer = QTimer()
-    timer.timeout.connect(lambda: update_test_angles(window))
-    timer.timeout.connect(lambda: update_trayectoria_test(window))
-    timer.start(1000)
-
-    sys.exit(app.exec_())

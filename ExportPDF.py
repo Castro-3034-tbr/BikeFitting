@@ -81,7 +81,14 @@ class AnalisisWindow():
         self.grafica_R.setLimits(xMin=0, xMax=100, yMin=0, yMax=100)
 
     def update_trayectorias(self):
-        """Actualiza las trayectorias de los graficos."""
+        """
+        Actualiza las trayectorias de los gráficos.
+
+        El método actualiza las gráficas de trayectoria derecha e izquierda usando los valores almacenados en la ventana principal.
+
+        Returns:
+            None
+        """
 
         #Obtenemos los valores
         valores_L = self.main_window.valores_grafica_L
@@ -101,13 +108,18 @@ class AnalisisWindow():
 
 
     def draw_range_bar(self, ax, name, range_values):
-        """Dibuja una barra de rango en el grafico.
-        INPUTS:
-        ax: El eje en el que dibujar la barra
-        name: El nombre de la barra
-        range_values: Los valores de rango (inicio, fin)
-        OUTPUTS:
-        Una línea vertical que representa el rango en el gráfico.
+        """
+        Dibuja una barra de rango en el gráfico.
+
+        El ángulo se representa como una barra de color en el eje dado.
+
+        Args:
+            ax (matplotlib.axes.Axes): Eje en el que dibujar la barra.
+            name (str): Nombre de la barra.
+            range_values (list): Valores de rango (inicio, fin).
+
+        Returns:
+            matplotlib.lines.Line2D: Línea vertical que representa el rango en el gráfico.
         """
         start, end = range_values
         mid = (start + end) / 2
@@ -127,7 +139,12 @@ class AnalisisWindow():
         return ax.axvline(start - 1, color='black', linewidth=2)
 
     def update_bars(self):
-        """Funcion que usamos para actualizar todos los valores"""
+        """
+        Actualiza todos los valores de las barras de rango.
+
+        Returns:
+            None
+        """
         # Evitar dibujar si la ventana no está visible
         if not self.isVisible():
             return
@@ -155,10 +172,21 @@ class AnalisisWindow():
         self.fig.canvas.draw_idle()
 
 def crear_pdf(nombre, angulos):
-    """Funcion que usaremos para generar el PDF con los resultados
-    INPUTS:
-    nombre: Nombre del usuario
-    
+    """
+    Genera el PDF con los resultados biomecánicos y las gráficas.
+
+    Args:
+        nombre (str): Nombre del usuario.
+        angulos (dict): Diccionario con los ángulos de las articulaciones.
+
+    Returns:
+        None
+
+    Raises:
+        FileNotFoundError: Si alguna imagen necesaria no se encuentra.
+
+    Example:
+        >>> crear_pdf('usuario', {'Rodilla': [30, 120]})
     """
     #Definimos el canvas para el PDF
     nombre_archivo = f"./pdf/informe_{nombre}.pdf"
@@ -252,20 +280,3 @@ def crear_pdf(nombre, angulos):
     c.drawString(margen, 10, "Informe generado por Castro_3034_tbr (" + str(datetime.now().date()) + ":" + str(datetime.now().time())+")")
 
     c.save()
-
-angles_joints = {
-    "Pelvis": [0, 0, 0],
-    "Cuello": [0, 0, 0],
-    "Cadera R": [0, 0, 0],
-    "Rodilla R": [0, 0, 0],
-    "Tobillo R": [0, 0, 0],
-    "Cadera L": [0, 0, 0],
-    "Rodilla L": [0, 0, 0],
-    "Tobillo L": [0, 0, 0],
-    "Hombro R": [0, 0, 0],
-    "Codo R": [0, 0, 0],
-    "Muneca R": [0, 0, 0],
-    "Hombro L": [0, 0, 0],
-    "Codo L": [0, 0, 0],
-    "Muneca L": [0, 0, 0],
-}
