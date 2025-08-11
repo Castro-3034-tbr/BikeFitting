@@ -1,4 +1,3 @@
-import sys
 import os
 import numpy as np
 import pyqtgraph as pg
@@ -8,19 +7,19 @@ from pyqtgraph.exporters import ImageExporter
 os.environ['QT_QPA_PLATFORM'] = 'xcb'  # Forzar X11 en lugar de Wayland
 os.environ['PYOPENGL_PLATFORM'] = 'glx'
 
-from PyQt5.QtWidgets import (
-    QApplication, QMainWindow, QWidget, QHBoxLayout, QVBoxLayout,
+from PyQt5.QtWidgets import ( QMainWindow, QWidget, QHBoxLayout, QVBoxLayout,
     QTableWidget, QTableWidgetItem, QMessageBox, QPushButton,
     QLabel, QGridLayout, QStackedWidget, QSizePolicy, QDialog, QComboBox,QLineEdit
 )
 from PyQt5.QtCore import QTimer, Qt
 import pyqtgraph.opengl as gl
 from PyQt5.QtWidgets import QHeaderView, QAction, QActionGroup, QMenu
-from PyQt5.QtMultimedia import QCameraInfo
 from PyQt5.QtGui import QPalette, QColor,QPixmap
 
 import matplotlib.pyplot as plt
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
+
+import cv2 as cv
 
 from ExportPDF import crear_pdf
 
@@ -46,21 +45,26 @@ class BiomecanicaUI(QMainWindow):
         # Seleccion de vista
         visualization_group = QActionGroup(self)
         visualization_group.setExclusive(True)
+        view_white_action = QAction("Vista Blanca", self, checkable=True)
         view_2d_action = QAction("Vista Imagen", self, checkable=True)
         view_3d_action = QAction("Vista 3D", self, checkable=True)
+        visualization_group.addAction(view_white_action)
         visualization_group.addAction(view_2d_action)
         visualization_group.addAction(view_3d_action)
+        visualization_menu.addAction(view_white_action)
         visualization_menu.addAction(view_2d_action)
         visualization_menu.addAction(view_3d_action)
 
-        #TODO: Implementar la acciones de cambio de vista
-        self.camaras_configuradas = True #TODO: Cambiar esto cuando se implementen la configuracion de camaras
+        #Acciones de cambio de camaras
+        self.camaras_configuradas = False
+
+        view_white_action.triggered.connect(lambda: self.cambiar_vista("Blanca"))
         view_2d_action.triggered.connect(lambda: self.cambiar_vista("2D"))
         view_3d_action.triggered.connect(lambda: self.cambiar_vista("3D"))
 
         #Menu de configuracion
-        self.list_cam = ["Cam 1", "Cam 2", "Cam 3", "Cam 4"]
-        # self.ObtainCamAvailable() TODO:
+        self.list_cam = ["Camera 1", "Camera 2" ,"Camera 3"]
+        self.ObtainCamAvailable()
 
         #Visualizar camaras disponibles
         cam_menu = QMenu("Camaras Disponibles", self)
@@ -70,14 +74,8 @@ class BiomecanicaUI(QMainWindow):
 
         config_menu.addMenu(cam_menu)
 
-        #Paguina de configuracion de vista
-        cam_vista = {
-            "Vista Derecha":"",
-            "Vista Izquierda":"",
-            "vista Trasera":"",
-            "Vista Frontal":"",
-        }
-        conf_cam_menu = QAction("Configuracion de Camaras", self)
+        # Pagina de configuracion de vista
+        conf_cam_menu = QAction("Configuracion de amaras", self)
         conf_cam_menu.triggered.connect(self.open_configcam_window)
         config_menu.addAction(conf_cam_menu)
 
@@ -213,19 +211,16 @@ class BiomecanicaUI(QMainWindow):
 
         # Panel 2D (cuadricula de las 4 camaras)
         self.vista_2d = QWidget()
-        grid = QGridLayout(self.vista_2d)
-        grid.setContentsMargins(0, 0, 0, 0)
-        grid.setSpacing(2)
+        self.grid = QGridLayout(self.vista_2d)
+        self.grid.setContentsMargins(0, 0, 0, 0)
+        self.grid.setSpacing(2)
 
-        # Crear 4 etiquetas de camara dinamicas
-        self.cam_labels = []
-        for i, vista in enumerate(self.list_cam):
-            lbl = QLabel(vista)
-            lbl.setStyleSheet("background-color: black; color: white; border: 1px solid gray;")
-            lbl.setAlignment(Qt.AlignCenter)
-            lbl.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
-            self.cam_labels.append(lbl)
-            grid.addWidget(lbl, i // 2, i % 2)
+        self.cam_vista = {
+            "Frontal":"",
+            "Izquierda":"",
+            "Trasera":"",
+            "Derecha":"",
+        }
 
         #Stacked widget para cambiar entre vistas
         self.stacked_widget = QStackedWidget()
@@ -310,11 +305,12 @@ class BiomecanicaUI(QMainWindow):
         """
 
         #Obtenemos las camaras disponibles
-        cameras = QCameraInfo.availableCameras()
-        self.list_cam = [cam.description() for cam in cameras]
-        if not self.list_cam:
-            self.list_cam.append("No hay camaras disponibles")
-            return
+        for i in range(10):
+            #Probamos con cv2 si estan disponibles
+            cap = cv.VideoCapture(i)
+            if cap.isOpened():
+                self.list_cam.append(f"Camera {i}")
+            cap.release()
 
     def cambiar_vista(self, vista):
         """
@@ -326,7 +322,7 @@ class BiomecanicaUI(QMainWindow):
         Returns:
             None
         """
-        if not self.camaras_configuradas:
+        if not self.camaras_configuradas and vista != "Blanca":
             # Si no estan configuradas las camaras, forzar panel blanco
             self.stacked_widget.setCurrentIndex(0)
 
@@ -334,13 +330,69 @@ class BiomecanicaUI(QMainWindow):
             QMessageBox.warning(self, "Advertencia", "Por favor, configure las camaras antes de cambiar la vista. Minimo es necesario configurar la camara derecha y la izquierda.")
 
             return
-
-        if vista == "3D":
+        if vista == "Blanca":
+            self.stacked_widget.setCurrentIndex(0)
+        elif vista == "3D":
             # Asegurar que el 3D este inicializado antes de mostrar
             self.stacked_widget.setCurrentIndex(1)
             QTimer.singleShot(1000, self.initialize_3d_when_ready)
         elif vista == "2D":
+            #Activamos la vista 2D
             self.stacked_widget.setCurrentIndex(2)
+
+            #Calculamos el tamaño que le corresponde a cada camaras
+            width_vista, height_vista = self.vista_2d.width(), self.vista_2d.height()
+
+            # Calculamos el tamaño que le corresponde a cada camara
+
+            #Obtemos la lista de camaras asignadas
+            listCamaras = []
+            for _, name in enumerate(self.cam_vista.items()):
+                name = name[1]  # Obtener el nombre de la camara
+                if name != "Sin asignar " and name != "":
+                    listCamaras.append(name)
+            print(listCamaras)
+            num_camaras = len(listCamaras)
+            if num_camaras > 1:
+                width = width_vista//2
+                height = height_vista//2
+            else:
+                width = width_vista
+                height = height_vista
+
+            # Crear 4 etiquetas de camara dinamicas
+            self.cam_labels = []
+            for i, vista in enumerate(listCamaras):
+                lbl = QLabel()
+                lbl.setStyleSheet("background-color: black; color: white; border: 1px solid gray;")
+                lbl.setAlignment(Qt.AlignCenter)
+                lbl.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
+                lbl.setFixedSize(width, height)  # Elige el tamaño que prefieras
+                self.cam_labels.append((vista, lbl))
+                self.grid.addWidget(lbl, i // 2, i % 2)
+
+
+    def updateImagen(self,vista, frame):
+        """
+        Actualiza la imagen mostrada en la interfaz 2D.
+
+        Args:
+            frame (QImage): La nueva imagen a mostrar.
+            vista (str): La vista a la que pertenece la imagen (Frontal, Izquierda, Trasera y Derecha).
+
+        Returns:
+            None
+        """
+        if self.stacked_widget.currentIndex() != 2:
+            #Si no estamos en la vista 2D no se actualiza
+            return
+
+        #Actualizamos la imagen en la interfaz
+        for vista_lbl, lbl in self.cam_labels:
+            if vista == vista_lbl:
+                pixmap = QPixmap.fromImage(frame)
+                pixmap = pixmap.scaled(lbl.size(), Qt.KeepAspectRatio)
+                lbl.setPixmap(pixmap)
 
     def export_function(self):
         """
@@ -407,11 +459,9 @@ class BiomecanicaUI(QMainWindow):
         except Exception as e:
             print(f"Error configurando exoesqueleto 3D: {e}")
             # Fallback: solo mostrar grilla basica
-            try:
-                grid = gl.GLGridItem()
-                self.vista_3d.addItem(grid)
-            except:
-                pass
+
+            grid = gl.GLGridItem()
+            self.vista_3d.addItem(grid)
 
     def update_skeleton(self):
         """
@@ -449,7 +499,7 @@ class BiomecanicaUI(QMainWindow):
         """
 
         #Calculamos el punto para cada articulacion ( Vamos a probar con la cadera derecha, rodilla derecha y tobillo derecho )
-        for i, conect in enumerate(self.connections):
+        for _, conect in enumerate(self.connections):
             start_idx, end_idx, joint_idx, link_idx = conect
             if joint_idx is None or link_idx is None:
                 continue
@@ -562,6 +612,7 @@ class ConfigCamWindow(QDialog):
         combo = QComboBox()
         combo.addItem("Sin asignar ")  # opcion en blanco
         combo.addItems(self.main_window.list_cam)  # Usar las camaras disponibles
+        combo.setObjectName(name)
         combo.currentIndexChanged.connect(self.update_combo_options)
 
         # Anadimos al layout
@@ -588,13 +639,18 @@ class ConfigCamWindow(QDialog):
         """
 
         selected = set()
-        for name, combo in self.combo_boxes.items():
+        for _ , combo in self.combo_boxes.items():
             text = combo.currentText()
             if text and text != "Sin asignar" and text != "":  # ignoramos si esta vacio
                 selected.add(text)
+                #Añadimos en el diccionario
+                name = combo.objectName()
+
+                #Guardamos el indice de la camara que corresponde a cada vista
+                self.main_window.cam_vista[name] = text
 
         # Actualizamos combos
-        for name, combo in self.combo_boxes.items():
+        for _, combo in self.combo_boxes.items():
             # Obtener el texto actual del combo
             current = combo.currentText()
             # Evitar senales para evitar bucles infinitos
