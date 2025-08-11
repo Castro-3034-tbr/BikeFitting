@@ -1,90 +1,99 @@
 # BikeFitting 
 
-> **ENGLISH SUMMARY**
+Esta rama forma parte de un sistema de análisis biomecánico, y se encarga de proporcionar una interfaz gráfica de usuario (GUI) para visualizar resultados y exportarlos en formato PDF.
 
-This project aims to analyze the **biomechanics of a cyclist** using **computer vision**, a **webcam**, and a **YOLOv11 Pose model**. It calculates key joint angles from body landmarks detected during pedaling, enabling postural analysis, injury prevention, and performance optimization.  
-Designed to evolve into a real-time, multi-camera 3D analysis system with intelligent tracking and feedback.
+## 🎯 Objetivos
 
-# 🚴 Análisis Biomecánico de Ciclistas mediante Visión Artificial
+- Mostrar los resultados del análisis de forma visual e interactiva.
 
-Este proyecto busca analizar la **biomecánica del ciclista** durante el pedaleo mediante técnicas de **visión artificial**, usando una **webcam** y un modelo de detección de poses basado en **YOLOv11**. A partir de los puntos clave del cuerpo, se calcula una serie de **ángulos articulares relevantes** para evaluar la postura, prevenir lesiones y optimizar el rendimiento.
+- Permitir al usuario exportar gráficos y datos clave en un documento PDF estructurado.
 
-## 🎯 Objetivo General
+- Integrar las funciones de exportación sin depender de herramientas externas.
 
-Diseñar e implementar una herramienta capaz de:
-- Detectar automáticamente los movimientos clave del ciclista.
-- Calcular ángulos biomecánicos relevantes.
-- Ofrecer feedback visual y cuantitativo.
-- Servir de base para análisis más avanzados en versiones futuras.
-
-## 📌 Características Principales
-
-- 🧠 Detección automática de keypoints anatómicos (hombros, cadera, rodillas, tobillos, etc.).
-- 📐 Cálculo de ángulos articulares en tiempo real o por archivo.
-- 🎯 Visualización gráfica de los ángulos sobre el vídeo o imagen.
-- 💾 Exportación de resultados con anotaciones biomecánicas.
-- 🧩 Estructura modular para futuras ampliaciones (multi-cámara, análisis temporal, comparaciones, etc.).
-
-
-## ⚙️ Requisitos
-
-- Python 3.8 o superior  
-- OpenCV ≥ 4.5  
-- Ultralytics YOLO ≥ 8.x  
-- NumPy  
-
-Instalación rápida:
-```bash
-pip install -r requirements.txt
-````
-
-
-## ▶️ Ejecución
-
-1. Asegúrate de tener el modelo entrenado en `models/best_Pose.pt`.
-2. Ejecuta el análisis:
-
-```bash
-python main.py
+## 📦 Estructura de Carpetas
+```
+Biomecanica/
+├── pdf/                    # Carpeta donde se almacenan los documentos PDF generados
+├── .images/                # Carpeta donde se almacenan las imágenes generadas
+├── .images_readme/         # Carpeta donde se almacenan las imágenes para el README
+│   ├── ImagenCofCam.jpg
+│   └── logo.png
+├── GUI.py                  # Interfaz gráfica de usuario
+├── ExportPDF.py            # Funciones para exportar a PDF
+└── README.md               # Documentación del proyecto
 ```
 
-Soporta tanto imágenes como vídeos. El resultado se guarda con anotaciones visuales en el archivo de salida.
-
----
-
-## 📊 Resultados Actuales
-
-Actualmente, el sistema es capaz de:
-
-- ✅ Detectar automáticamente los puntos clave del cuerpo a partir de vídeo o imagen.
-- ✅ Calcular y visualizar ángulos articulares como rodilla-cadera-tobillo o brazo-hombro.
-- ✅ Dibujar esqueleto, arcos, líneas de análisis y ángulos sobre la imagen original.
-- ✅ Exportar resultados con superposición gráfica.
-- ✅ Entrenar modelos propios con YOLOv11 Pose para adaptar a datasets específicos.
-
-> 📌 *En su estado actual, el sistema está en fase funcional de prototipo. La precisión es suficiente para pruebas controladas, con margen de mejora en robustez y exactitud.*
-
-## 🚧 Desarrollos Futuros
-
-Este proyecto está diseñado para crecer hacia una solución más avanzada y profesional. Las próximas etapas previstas incluyen:
-
-- **🎥 Entrada en tiempo real desde cámara**: reemplazo del procesamiento por archivo.
-- **🖥️ Sistema multicámara**: para reconstrucción 3D mediante triangulación de keypoints.
-- **📐 Calibración del entorno**: herramientas automáticas para corregir distancias y perspectiva.
-- **📈 Seguimiento temporal y análisis dinámico**: representación de la evolución de ángulos por ciclo de pedaleo.
-- **📤 Exportación de datos en CSV/PDF**: informes automáticos y exportación para análisis posteriores.
-- **🔁 Modo comparación**: referencia contra una técnica ideal o patrón de pedaleo eficiente.
-- **🎛️ Interfaz gráfica (GUI)**: control del flujo de análisis sin necesidad de código.
-* **🤖 Filtro de Kalman para seguimiento continuo**:
-
-  * Estimación de keypoints entre frames.
-  * Reducción de ruido.
-  * Mejora del rendimiento y robustez ante oclusiones.
+## ⚙️ Requisitos
+- NumPy
+- PyQt5
+- PyQtGraph
+- Matplotlib
+- ReportLab
+- Pillow
 
 
-## 🤝 Contribuciones
+## 1. Ventana Principal
 
-Este proyecto está en crecimiento. Las contribuciones son bienvenidas, ya sea mediante PRs, reportes de bugs o sugerencias de mejora.
+La ventana principal actúa como el núcleo de la aplicación, proporcionando un acceso centralizado a todas las funciones del sistema de análisis biomecánico.
+Desde aquí, el usuario puede navegar a las diferentes secciones, configurar el entorno de análisis, iniciar sesiones de captura y generar informes PDF.
+![Imagen de la Ventana Principal](.images_readme/principal_window.png)
+
+### **1. Diseño de interfaz**
+
+- Basada en PyQt5 con una disposición QVBoxLayout y QGridLayout para estructurar los componentes.
+
+- Barra de herramientas y menús superiores para acceso rápido a funciones críticas. Divididos en cuatro menús diferentes:
+  1. **Archivo**: Opciones para guardar y exportar datos mediante PDF y botón para salir.
+  2. **Visualización**: Cambia entre los diferentes modos de visualización de datos entre Vista 2D y 3D. Para el cambio de vista es necesario configurar dos cámaras, para ambos laterales.
+  3. **Configuración**: Ajustes de cámaras. Cuenta con la lista de camaras disponibles y la ejecucion del menu de configuracion de camaras.
+  4. **Ayuda**: Acceso al repositorio de GitHub del proyecto y contacto.
+
+- La **vista principal** se muestra en la izquierda las vistas configurables y en la derecha se muestra una tabla los angulos. Se muestra el angulo local, el valor maximo del angulo y el valor minimo del angulo.
+
+### Vistas
+- **Vista 2D**: Representación sobre las imagen capturada por la imagen, la informacion de los angulos
+
+![Imagen de la Vista 2D](.images_readme/vista_2d_window.png)
+
+- **Vista 3D**: Representación tridimensional de la posición actual. (Se encuentra en desarrollo debido a errores de visualización)
+![Imagen de la Vista 3D](.images_readme/vista_3d_window.png)
+
+## 2. Página de Análisis
+
+La página de análisis es el entorno principal para visualizar y procesar los datos biomecánicos.
+
+- **Visualización gráfica en tiempo real** mediante *PyQtGraph*.
+- **Secciones divididas**:  
+  - Gráficas comparativa de los angulos de cada articulacion respecto el rango de angulos optimo.
+  - Trayectoria de los puntos clave de la rodilla y el tobillo.
+- Controles para **reiniciar** los datos actuales.
+
+
+![Imagen de la Página de Análisis](.images_readme/analisis_window.png)
+
+
+
+## 3. Página de Exportación (Generación de PDF)
+
+En esta sección el usuario puede **generar un informe en formato PDF** con los resultados del análisis.
+
+- Botón principal para **exportar resultados**.
+- Generación de documento PDF con:
+  - Tabla de angulos maximos y minimos
+  - Gráficas comparativa de los angulos de cada articulacion respecto el rango de angulos optimo.
+  - Grafica de las trayectoria de los puntos clave del tobillo y de la rodilla
+
+
+- Flujo optimizado para que el usuario no necesite guardar las gráficas manualmente; estas se extraen directamente.
+
+![Imagen de la Página de Exportación](.images_readme/export_window.png)
+
+## 4. Página de Configuración de cámaras
+
+Permite ajustar la posicion de las camaras respecto al sujeto:
+
+![Imagen de la Página de Configuración de Cámaras](.images_readme/config_cam_window.png)
+
 
 ## 📩 Contacto
 
