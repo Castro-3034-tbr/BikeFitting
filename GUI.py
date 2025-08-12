@@ -349,8 +349,9 @@ class BiomecanicaUI(QMainWindow):
             listCamaras = []
             for _, name in enumerate(self.cam_vista.items()):
                 name = name[1]  # Obtener el nombre de la camara
-                if name != "Sin asignar " and name != "":
+                if name != "Sin asignar" and name != "":
                     listCamaras.append(name)
+                
             print(listCamaras)
             num_camaras = len(listCamaras)
             if num_camaras > 1:
@@ -624,7 +625,7 @@ class ConfigCamWindow(QDialog):
 
         #Creamos el combo
         combo = QComboBox()
-        combo.addItem("Sin asignar ")  # opcion en blanco
+        combo.addItem("Sin asignar")  # opcion en blanco
         combo.addItems(self.main_window.list_cam)  # Usar las camaras disponibles
         combo.setObjectName(name)
         combo.currentIndexChanged.connect(self.update_combo_options)
