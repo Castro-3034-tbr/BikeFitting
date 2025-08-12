@@ -2,15 +2,11 @@ from reportlab.lib.pagesizes import A4
 from reportlab.pdfgen import canvas as rl_canvas
 from reportlab.lib import colors
 from reportlab.platypus import Table, TableStyle
-from reportlab.lib.utils import ImageReader
 import numpy as np
 import matplotlib.pyplot as plt
 import pyqtgraph as pg
-from pyqtgraph.exporters import ImageExporter
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
-import io
 from datetime import datetime
-from PIL import Image
 
 class AnalisisWindow():
     """Ventana de analisis de datos biomecanicos."""
@@ -224,7 +220,7 @@ def crear_pdf(nombre, angulos):
     
     #Transformamos los datos
     datos=[["Articulación", "Angulo Minimo (º)","Angulo Maximo (º)"]]
-    for articulacion, angulos in angulos.items():
+    for articulacion, _ in angulos.items():
         datos.append([articulacion, round(angulos[0], 2), round(angulos[1], 2)])
 
     #Creamos la tabla

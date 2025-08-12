@@ -125,6 +125,4 @@ timer = QTimer()
 timer.timeout.connect(BuclePrincipal)
 timer.start(100)  # Ejecutar cada 100 ms
 
-#TODO: Hacer para que se active la deteccion cuando esten las camaras configuradas.
-
 app.exec_()
