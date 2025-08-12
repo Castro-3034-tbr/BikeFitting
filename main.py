@@ -13,7 +13,7 @@ os.environ["QT_QPA_PLATFORM_PLUGIN_PATH"] = "/usr/lib/qt/plugins/platforms"
 
 
 from GUI import BiomecanicaUI
-# from functions import *
+from functions import AnalizarFrame
 
 def setup():
     """
@@ -30,8 +30,7 @@ def setup():
     for name in camaras:
         #Obtenemos el ID de la cámara
         id = name.replace("Camera ", "")
-        if id != "0":
-            pass
+        
         #Intentamos cargar la camara
         cap = cv.VideoCapture(int(id))
         if not cap.isOpened():
@@ -64,7 +63,39 @@ def BuclePrincipal():
             print(f"Error al leer el frame de la cámara {name}.")
             continue
         
-            # Convertimos el frame (numpy array) a QImage antes de actualizar la visualización
+        #Analizamos el frame
+        frame, angulos = AnalizarFrame(frame, model)
+
+        #Obtenemos la vista de la camara
+        vista = [k for k in MainWindow.cam_vista if MainWindow.cam_vista[k] == name]
+        if vista:
+            vista = vista[0]
+        else:
+            vista = None
+
+        if vista == "Derecha":
+            # Procesar la vista derecha
+            MainWindow.angles_joints["Pelvis"][0] = angulos["Pelvis"]
+            MainWindow.angles_joints["Cuello"][0] = angulos["Cuello"]
+            MainWindow.angles_joints["Cadera R"][0] = angulos["Cadera"]
+            MainWindow.angles_joints["Rodilla R"][0] = angulos["Rodilla"]
+            MainWindow.angles_joints["Tobillo R"][0] = angulos["Tobillo"]
+            MainWindow.angles_joints["Hombro R"][0] = angulos["Hombro"]
+            MainWindow.angles_joints["Codo R"][0] = angulos["Codo"]
+            MainWindow.angles_joints["Muneca R"][0] = angulos["Muneca"]
+
+        elif vista == "Izquierda":
+            MainWindow.angles_joints["Pelvis"][0] = angulos["Pelvis"]
+            MainWindow.angles_joints["Cuello"][0] = angulos["Cuello"]
+            MainWindow.angles_joints["Cadera L"][0] = angulos["Cadera"]
+            MainWindow.angles_joints["Rodilla L"][0] = angulos["Rodilla"]
+            MainWindow.angles_joints["Tobillo L"][0] = angulos["Tobillo"]
+            MainWindow.angles_joints["Hombro L"][0] = angulos["Hombro"]
+            MainWindow.angles_joints["Codo L"][0] = angulos["Codo"]
+            MainWindow.angles_joints["Muneca L"][0] = angulos["Muneca"]
+
+        #Actualizamos la vista 3D
+        MainWindow.update_angles()
 
         if frame is not None:
             # OpenCV usa BGR, QImage espera RGB

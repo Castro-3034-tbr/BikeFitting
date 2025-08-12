@@ -63,7 +63,7 @@ class BiomecanicaUI(QMainWindow):
         view_3d_action.triggered.connect(lambda: self.cambiar_vista("3D"))
 
         #Menu de configuracion
-        self.list_cam = ["Camera 1", "Camera 2" ,"Camera 3"]
+        self.list_cam = []
         self.ObtainCamAvailable()
 
         #Visualizar camaras disponibles
@@ -75,7 +75,7 @@ class BiomecanicaUI(QMainWindow):
         config_menu.addMenu(cam_menu)
 
         # Pagina de configuracion de vista
-        conf_cam_menu = QAction("Configuracion de amaras", self)
+        conf_cam_menu = QAction("Configuracion de camaras", self)
         conf_cam_menu.triggered.connect(self.open_configcam_window)
         config_menu.addAction(conf_cam_menu)
 
@@ -216,10 +216,10 @@ class BiomecanicaUI(QMainWindow):
         self.grid.setSpacing(2)
 
         self.cam_vista = {
-            "Frontal":"",
-            "Izquierda":"",
-            "Trasera":"",
-            "Derecha":"",
+            "Frontal":"Sin asignar",
+            "Izquierda":"Sin asignar",
+            "Trasera":"Sin asignar",
+            "Derecha":"Sin asignar",
         }
 
         #Stacked widget para cambiar entre vistas
@@ -588,7 +588,21 @@ class ConfigCamWindow(QDialog):
         self.add_view_combo(center_layout, "Izquierda", 1, 0)
         self.add_view_combo(center_layout, "Derecha", 1, 2)
         self.add_view_combo(center_layout, "Trasera", 2, 1)
+        
+        #Setup a los valores actuales
+        self.Setup()
 
+    def Setup(self):
+        """Configura el valor de los combos con el valor que tienen ya definidos.
+        """
+
+        for name, combo in self.combo_boxes.items():
+            
+            #Obtenemos el valor actual de cada vista
+            actual = self.main_window.cam_vista[name]
+
+            #Asignamos el valor actual al combo
+            combo.setCurrentText(actual)
 
     def add_view_combo(self, layout, name, row, col):
         """
@@ -643,11 +657,11 @@ class ConfigCamWindow(QDialog):
             text = combo.currentText()
             if text and text != "Sin asignar" and text != "":  # ignoramos si esta vacio
                 selected.add(text)
-                #Añadimos en el diccionario
-                name = combo.objectName()
 
-                #Guardamos el indice de la camara que corresponde a cada vista
-                self.main_window.cam_vista[name] = text
+            #Añadimos en el diccionario
+            name = combo.objectName()
+            #Guardamos el indice de la camara que corresponde a cada vista
+            self.main_window.cam_vista[name] = text
 
         # Actualizamos combos
         for _, combo in self.combo_boxes.items():
@@ -685,12 +699,17 @@ class ConfigCamWindow(QDialog):
         left_value = self.combo_boxes["Izquierda"].currentText()
         right_value = self.combo_boxes["Derecha"].currentText()
 
+        print("left:", left_value, "right:", right_value)
+
     #Comprobamos que no esten vacios
-        if left_value != "Sin asignar" or right_value != "Sin asignar" or left_value != "" or right_value != "":
+        if (left_value != "Sin asignar" and left_value != "") or (right_value != "Sin asignar" and right_value != ""):
             #Si tenemos configuracion minima, habilitamos el boton de analisis
+            print("Configuración mínima de cámaras lista.")
             self.main_window.camaras_configuradas = True
-
-
+        else:
+            print("Configuración mínima de cámaras no lista.")
+            self.main_window.camaras_configuradas = False
+        print(self.main_window.camaras_configuradas)
 #region: Analisis window
 class AnalisisWindow(QDialog):
     """Ventana de analisis de datos biomecanicos."""
