@@ -8,7 +8,7 @@ print("YOLO model loaded successfully.")
 
 #Realizamos el entrenamiento
 model.train(
-    data='/home/castro/Música/Biomecanica/data/data.yaml',
+    data='/home/castro/Musica/Biomecanica/data/data.yaml',
     epochs=100,
     imgsz=640,
     batch=16,

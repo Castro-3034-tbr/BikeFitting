@@ -4,7 +4,7 @@ import numpy as np
 
 def CalculeAngles(p1,p2,p3):
     """
-    Calcula el ángulo entre tres puntos.
+    Calcula el angulo entre tres puntos.
 
     Args:
         p1 (tuple): Coordenadas del primer punto (x, y).
@@ -12,16 +12,16 @@ def CalculeAngles(p1,p2,p3):
         p3 (tuple): Coordenadas del tercer punto (x, y).
 
     Returns:
-        dict: Diccionario con los ángulos y vectores calculados.
-            - 'angle': Ángulo entre los vectores p1->p2 y p2->p3 en grados.
-            - 'angle_v1': Ángulo del vector p1->p2 respecto al eje x en grados.
-            - 'angle_v2': Ángulo del vector p2->p3 respecto al eje x en grados.
+        dict: Diccionario con los angulos y vectores calculados.
+            - 'angle': angulo entre los vectores p1->p2 y p2->p3 en grados.
+            - 'angle_v1': angulo del vector p1->p2 respecto al eje x en grados.
+            - 'angle_v2': angulo del vector p2->p3 respecto al eje x en grados.
             - 'vector1': Vector de p1 a p2 (dx, dy).
             - 'vector2': Vector de p2 a p3 (dx, dy).
             - 'p1', 'p2', 'p3': Puntos originales.
 
     Raises:
-        ValueError: Si ocurre un error en el cálculo del ángulo.
+        ValueError: Si ocurre un error en el calculo del angulo.
         ZeroDivisionError: Si los vectores tienen longitud cero.
 
     Example:
@@ -65,7 +65,7 @@ def CalculeAngles(p1,p2,p3):
 
 def Draw(img, p1,c,p2, radius=50, color=(0, 255, 0), thickness=2, opuesto=False):
     """
-    Dibuja líneas y un arco entre tres puntos, representando el ángulo formado.
+    Dibuja lineas y un arco entre tres puntos, representando el angulo formado.
 
     Args:
         img (np.ndarray): Imagen sobre la que se dibuja.
@@ -75,10 +75,10 @@ def Draw(img, p1,c,p2, radius=50, color=(0, 255, 0), thickness=2, opuesto=False)
         radius (int, optional): Radio del arco. Por defecto 50.
         color (tuple, optional): Color del arco y texto. Por defecto (0, 255, 0).
         thickness (int, optional): Grosor del arco y texto. Por defecto 2.
-        opuesto (bool, optional): Si es True, dibuja el ángulo opuesto. Por defecto False.
+        opuesto (bool, optional): Si es True, dibuja el angulo opuesto. Por defecto False.
 
     Returns:
-        tuple: Imagen con los elementos dibujados y el ángulo calculado.
+        tuple: Imagen con los elementos dibujados y el angulo calculado.
     """
     
     #Dibujamos los puntos
@@ -86,7 +86,7 @@ def Draw(img, p1,c,p2, radius=50, color=(0, 255, 0), thickness=2, opuesto=False)
     cv.circle(img, c, radius=5, color=(255, 255, 255), thickness=-1)  # Verde
     cv.circle(img, p2, radius=5, color=(255, 255, 255), thickness=-1)  # Azul
 
-    #Dibujamos las líneas entre los puntos
+    #Dibujamos las lineas entre los puntos
     cv.line(img, p1, c, (255, 255, 255), 2)  
     cv.line(img, c, p2, (255, 255, 255), 2)  
     
@@ -111,7 +111,7 @@ def Draw(img, p1,c,p2, radius=50, color=(0, 255, 0), thickness=2, opuesto=False)
     #     #Calculamos el angulo central
     #     angulo_central = (angle_v1 + angle_v2) / 2
         
-    #     #Calculamos la posición del texto debido que hay varios angulos concentricos
+    #     #Calculamos la posicion del texto debido que hay varios angulos concentricos
     #     x_text = int(c[0] + np.cos(np.radians(angulo_central)) * radius)
     #     y_text = int(c[1] + np.sin(np.radians(angulo_central)) * radius)
     #     if radius == 25:
@@ -122,16 +122,16 @@ def Draw(img, p1,c,p2, radius=50, color=(0, 255, 0), thickness=2, opuesto=False)
     #         color = (255, 255, 255)  # Cambiamos el color del texto a blanco
 
     # else:
-    #     #Calculamos la posición del texto
+    #     #Calculamos la posicion del texto
     #     x_text = c[0] + 10
     #     y_text = c[1] 
     #     color = (255, 255, 255)  # Cambiamos el color del texto a blanco
     
 
-    # # Parámetros de la elipse
+    # # Parametros de la elipse
     # center = c                  # Centro de la elipse
-    # start_angle = angle_v1       # Ángulo inicial del arco
-    # end_angle = angle_v2         # Ángulo final del arco
+    # start_angle = angle_v1       # angulo inicial del arco
+    # end_angle = angle_v2         # angulo final del arco
 
     # # Dibujar la elipse
     # cv.ellipse(img, center, (radius, radius), 0, start_angle, end_angle, color, thickness)
@@ -142,14 +142,14 @@ def Draw(img, p1,c,p2, radius=50, color=(0, 255, 0), thickness=2, opuesto=False)
 
 def AnalizarFrame(img, model):
     """
-    Analiza el frame para detectar poses y dibujar ángulos.
+    Analiza el frame para detectar poses y dibujar angulos.
 
     Args:
         img (np.ndarray): Imagen a analizar.
-        model: Modelo de detección de poses.
+        model: Modelo de deteccion de poses.
 
     Returns:
-        tuple: Imagen con los ángulos dibujados y diccionario de ángulos calculados.
+        tuple: Imagen con los angulos dibujados y diccionario de angulos calculados.
 
     Raises:
         Exception: Si no se detectan keypoints en la imagen.

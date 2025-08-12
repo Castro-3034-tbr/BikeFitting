@@ -28,13 +28,13 @@ def setup():
     camaras = MainWindow.list_cam
 
     for name in camaras:
-        #Obtenemos el ID de la cámara
+        #Obtenemos el ID de la camara
         id = name.replace("Camera ", "")
         
         #Intentamos cargar la camara
         cap = cv.VideoCapture(int(id))
         if not cap.isOpened():
-            print(f"Error al abrir la cámara {name} con ID {id}.")
+            print(f"Error al abrir la camara {name} con ID {id}.")
         else:
             camaras_obj[name] = cap
 
@@ -52,7 +52,7 @@ def BuclePrincipal():
         return
 
     if not configurado:
-        # Si no está configurado, hacemos la configuración
+        # Si no esta configurado, hacemos la configuracion
         setup()
         configurado = True
     
@@ -60,7 +60,7 @@ def BuclePrincipal():
     for name, cap in camaras_obj.items():
         ret, frame = cap.read()
         if not ret:
-            print(f"Error al leer el frame de la cámara {name}.")
+            print(f"Error al leer el frame de la camara {name}.")
             continue
         
         #Analizamos el frame
@@ -115,12 +115,12 @@ print("Modelo cargado correctamente.")
 configurado = False
 camaras_obj= {}
 
-#Iniciamos la interfaz gráfica
+#Iniciamos la interfaz grafica
 app = QApplication([])
 MainWindow = BiomecanicaUI()
 MainWindow.show()
 
-#Creamos un bucle de ejecución
+#Creamos un bucle de ejecucion
 timer = QTimer()
 timer.timeout.connect(BuclePrincipal)
 timer.start(100)  # Ejecutar cada 100 ms

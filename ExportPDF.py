@@ -78,9 +78,9 @@ class AnalisisWindow():
 
     def update_trayectorias(self):
         """
-        Actualiza las trayectorias de los gráficos.
+        Actualiza las trayectorias de los graficos.
 
-        El método actualiza las gráficas de trayectoria derecha e izquierda usando los valores almacenados en la ventana principal.
+        El metodo actualiza las graficas de trayectoria derecha e izquierda usando los valores almacenados en la ventana principal.
 
         Returns:
             None
@@ -105,9 +105,9 @@ class AnalisisWindow():
 
     def draw_range_bar(self, ax, name, range_values):
         """
-        Dibuja una barra de rango en el gráfico.
+        Dibuja una barra de rango en el grafico.
 
-        El ángulo se representa como una barra de color en el eje dado.
+        El angulo se representa como una barra de color en el eje dado.
 
         Args:
             ax (matplotlib.axes.Axes): Eje en el que dibujar la barra.
@@ -115,7 +115,7 @@ class AnalisisWindow():
             range_values (list): Valores de rango (inicio, fin).
 
         Returns:
-            matplotlib.lines.Line2D: Línea vertical que representa el rango en el gráfico.
+            matplotlib.lines.Line2D: Linea vertical que representa el rango en el grafico.
         """
         start, end = range_values
         mid = (start + end) / 2
@@ -141,7 +141,7 @@ class AnalisisWindow():
         Returns:
             None
         """
-        # Evitar dibujar si la ventana no está visible
+        # Evitar dibujar si la ventana no esta visible
         if not self.isVisible():
             return
 
@@ -169,11 +169,11 @@ class AnalisisWindow():
 
 def crear_pdf(nombre, angulos):
     """
-    Genera el PDF con los resultados biomecánicos y las gráficas.
+    Genera el PDF con los resultados biomecanicos y las graficas.
 
     Args:
         nombre (str): Nombre del usuario.
-        angulos (dict): Diccionario con los ángulos de las articulaciones.
+        angulos (dict): Diccionario con los angulos de las articulaciones.
 
     Returns:
         None
@@ -204,13 +204,13 @@ def crear_pdf(nombre, angulos):
 
     # Texto a la izquierda
     c.setFont("Helvetica-Bold", 20)
-    texto_encabezado = f"Informe biomecánico de {nombre}"
+    texto_encabezado = f"Informe biomecanico de {nombre}"
     ancho_texto = c.stringWidth(texto_encabezado, "Helvetica-Bold", 20)
     x = margen + ancho_texto
     y = alto - margen - alto_img / 2 - 5
     c.drawRightString(x, y, texto_encabezado)
     
-    # Línea divisoria gris
+    # Linea divisoria gris
     y_linea = alto_encabezado - alto_img - 5
     c.setStrokeColor(colors.grey)
     c.setLineWidth(1)
@@ -219,13 +219,13 @@ def crear_pdf(nombre, angulos):
     # --- Tabla de angulos ---
     
     #Transformamos los datos
-    datos=[["Articulación", "Angulo Minimo (º)","Angulo Maximo (º)"]]
+    datos=[["Articulacion", "Angulo Minimo (º)","Angulo Maximo (º)"]]
     for articulacion, _ in angulos.items():
         datos.append([articulacion, round(angulos[0], 2), round(angulos[1], 2)])
 
     #Creamos la tabla
-    tamaño_columnas = [(ancho - 2 * margen) / len(datos[0])]*len(datos[0])
-    tabla = Table(datos, colWidths=tamaño_columnas)
+    tamano_columnas = [(ancho - 2 * margen) / len(datos[0])]*len(datos[0])
+    tabla = Table(datos, colWidths=tamano_columnas)
     tabla.setStyle(TableStyle([
         ('BACKGROUND', (0, 0), (-1, 0), colors.grey),
         ('TEXTCOLOR', (0, 0), (-1, 0), colors.black),

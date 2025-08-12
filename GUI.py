@@ -269,7 +269,7 @@ class BiomecanicaUI(QMainWindow):
         boton_info.clicked.connect(self.open_analisis_window)
         right_layout.addWidget(boton_info)
 
-        # Señal para cerrar seguro
+        # Senal para cerrar seguro
         self.app_quit_action = QAction("Salir", self)
         self.app_quit_action.triggered.connect(self.safe_quit)
         file_menu.addAction(self.app_quit_action)
@@ -285,9 +285,9 @@ class BiomecanicaUI(QMainWindow):
 
     def safe_quit(self):
         """
-        Cierra la aplicación de forma segura.
+        Cierra la aplicacion de forma segura.
 
-        Si la ventana de análisis está visible, la cierra antes de cerrar la aplicación principal.
+        Si la ventana de analisis esta visible, la cierra antes de cerrar la aplicacion principal.
 
         Returns:
             None
@@ -298,7 +298,7 @@ class BiomecanicaUI(QMainWindow):
 
     def ObtainCamAvailable(self):
         """
-        Obtiene las cámaras disponibles y las agrega al menú de configuración.
+        Obtiene las camaras disponibles y las agrega al menu de configuracion.
 
         Returns:
             None
@@ -314,7 +314,7 @@ class BiomecanicaUI(QMainWindow):
 
     def cambiar_vista(self, vista):
         """
-        Cambia la vista de visualización.
+        Cambia la vista de visualizacion.
 
         Args:
             vista (str): La vista a la que cambiar ("2D" o "3D").
@@ -340,10 +340,10 @@ class BiomecanicaUI(QMainWindow):
             #Activamos la vista 2D
             self.stacked_widget.setCurrentIndex(2)
 
-            #Calculamos el tamaño que le corresponde a cada camaras
+            #Calculamos el tamano que le corresponde a cada camaras
             width_vista, height_vista = self.vista_2d.width(), self.vista_2d.height()
 
-            # Calculamos el tamaño que le corresponde a cada camara
+            # Calculamos el tamano que le corresponde a cada camara
 
             #Obtemos la lista de camaras asignadas
             listCamaras = []
@@ -367,7 +367,7 @@ class BiomecanicaUI(QMainWindow):
                 lbl.setStyleSheet("background-color: black; color: white; border: 1px solid gray;")
                 lbl.setAlignment(Qt.AlignCenter)
                 lbl.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
-                lbl.setFixedSize(width, height)  # Elige el tamaño que prefieras
+                lbl.setFixedSize(width, height)  # Elige el tamano que prefieras
                 self.cam_labels.append((vista, lbl))
                 self.grid.addWidget(lbl, i // 2, i % 2)
 
@@ -396,7 +396,7 @@ class BiomecanicaUI(QMainWindow):
 
     def export_function(self):
         """
-        Abre la página de exportación de resultados.
+        Abre la pagina de exportacion de resultados.
 
         Returns:
             None
@@ -406,7 +406,7 @@ class BiomecanicaUI(QMainWindow):
 
     def update_angles(self):
         """
-        Actualiza los ángulos de las articulaciones en la tabla.
+        Actualiza los angulos de las articulaciones en la tabla.
 
         Returns:
             None
@@ -465,7 +465,7 @@ class BiomecanicaUI(QMainWindow):
 
     def update_skeleton(self):
         """
-        Crea un exoesqueleto básico y robusto con validaciones de depuración.
+        Crea un exoesqueleto basico y robusto con validaciones de depuracion.
 
         Returns:
             None
@@ -475,12 +475,12 @@ class BiomecanicaUI(QMainWindow):
 
     def calcular_punto_3d(self, origen, longitud, theta):
         """
-        Calcula un punto 3D a partir de un origen, longitud y ángulo theta.
+        Calcula un punto 3D a partir de un origen, longitud y angulo theta.
 
         Args:
             origen (np.ndarray): El punto de origen (x, y, z).
             longitud (float): La longitud del segmento.
-            theta (float): El ángulo en el plano XY.
+            theta (float): El angulo en el plano XY.
 
         Returns:
             np.ndarray: Un array numpy con el punto 3D (x, y, z).
@@ -492,7 +492,7 @@ class BiomecanicaUI(QMainWindow):
 
     def update_points(self):
         """
-        Actualiza los puntos del exoesqueleto según los ángulos de las articulaciones.
+        Actualiza los puntos del exoesqueleto segun los angulos de las articulaciones.
 
         Returns:
             None
@@ -522,7 +522,7 @@ class BiomecanicaUI(QMainWindow):
 
     def initialize_3d_when_ready(self):
         """
-        Inicializa los elementos 3D cuando el widget está listo.
+        Inicializa los elementos 3D cuando el widget esta listo.
 
         Returns:
             None
@@ -535,7 +535,7 @@ class BiomecanicaUI(QMainWindow):
 
     def open_configcam_window(self):
         """
-        Abre la ventana de configuración de cámaras.
+        Abre la ventana de configuracion de camaras.
 
         Returns:
             None
@@ -546,7 +546,7 @@ class BiomecanicaUI(QMainWindow):
 
     def open_analisis_window(self):
         """
-        Abre la ventana de análisis de datos biomecánicos.
+        Abre la ventana de analisis de datos biomecanicos.
 
         Returns:
             None
@@ -606,10 +606,10 @@ class ConfigCamWindow(QDialog):
 
     def add_view_combo(self, layout, name, row, col):
         """
-        Crea una etiqueta y combo para una vista específica.
+        Crea una etiqueta y combo para una vista especifica.
 
         Args:
-            layout (QLayout): Layout donde se añade el combo.
+            layout (QLayout): Layout donde se anade el combo.
             name (str): Nombre de la vista.
             row (int): Fila donde colocar el combo.
             col (int): Columna donde colocar el combo.
@@ -646,7 +646,7 @@ class ConfigCamWindow(QDialog):
 
     def update_combo_options(self):
         """
-        Actualiza las opciones de los combos cuando cambia una selección.
+        Actualiza las opciones de los combos cuando cambia una seleccion.
 
         Returns:
             None
@@ -658,7 +658,7 @@ class ConfigCamWindow(QDialog):
             if text and text != "Sin asignar" and text != "":  # ignoramos si esta vacio
                 selected.add(text)
 
-            #Añadimos en el diccionario
+            #Anadimos en el diccionario
             name = combo.objectName()
             #Guardamos el indice de la camara que corresponde a cada vista
             self.main_window.cam_vista[name] = text
@@ -689,7 +689,7 @@ class ConfigCamWindow(QDialog):
 
     def check_config(self):
         """
-        Verifica que la configuración mínima de cámaras está lista para iniciar el análisis.
+        Verifica que la configuracion minima de camaras esta lista para iniciar el analisis.
 
         Returns:
             None
@@ -707,7 +707,7 @@ class ConfigCamWindow(QDialog):
             self.main_window.camaras_configuradas = True
         else:
             self.main_window.camaras_configuradas = False
-        
+
 #region: Analisis window
 class AnalisisWindow(QDialog):
     """Ventana de analisis de datos biomecanicos."""
@@ -805,7 +805,7 @@ class AnalisisWindow(QDialog):
 
     def reiniciar_datos(self):
         """
-        Reinicia todos los valores y trayectorias de la ventana de análisis.
+        Reinicia todos los valores y trayectorias de la ventana de analisis.
 
         Returns:
             None
@@ -823,12 +823,12 @@ class AnalisisWindow(QDialog):
 
         #Actualizamos todo
         self.main_window.update_angles()
-        self.update_bars(forzar=True)  # Forzar actualización de barras
+        self.update_bars(forzar=True)  # Forzar actualizacion de barras
         self.update_trayectorias()
 
     def update_trayectorias(self):
         """
-        Actualiza las trayectorias de los gráficos de la ventana de análisis.
+        Actualiza las trayectorias de los graficos de la ventana de analisis.
 
         Returns:
             None
@@ -853,7 +853,7 @@ class AnalisisWindow(QDialog):
 
     def draw_range_bar(self, ax, name, range_values):
         """
-        Dibuja una barra de rango en el gráfico.
+        Dibuja una barra de rango en el grafico.
 
         Args:
             ax (matplotlib.axes.Axes): Eje en el que dibujar la barra.
@@ -861,7 +861,7 @@ class AnalisisWindow(QDialog):
             range_values (list): Valores de rango (inicio, fin).
 
         Returns:
-            matplotlib.lines.Line2D: Línea vertical que representa el rango en el gráfico.
+            matplotlib.lines.Line2D: Linea vertical que representa el rango en el grafico.
         """
         start, end = range_values
         mid = (start + end) / 2
@@ -885,12 +885,12 @@ class AnalisisWindow(QDialog):
         Actualiza todos los valores de las barras de rango.
 
         Args:
-            forzar (bool): Si es True, fuerza la actualización aunque la ventana no esté visible.
+            forzar (bool): Si es True, fuerza la actualizacion aunque la ventana no este visible.
 
         Returns:
             None
         """
-        # Evitar dibujar si la ventana no está visible
+        # Evitar dibujar si la ventana no esta visible
         if not self.isVisible() and not forzar:
             return
 
@@ -917,7 +917,7 @@ class AnalisisWindow(QDialog):
         self.fig.canvas.draw_idle()
 
 class ExportMenu(QDialog):
-    """Clase que usamos para exportar los resultados del análisis."""
+    """Clase que usamos para exportar los resultados del analisis."""
     def __init__(self, main_window=None, analisis_window=None):
         super().__init__()
         self.main_window = main_window
@@ -934,11 +934,11 @@ class ExportMenu(QDialog):
         self.username_edit = QLineEdit()
         layout.addWidget(self.username_edit)
 
-        # Botón para generar PDF
+        # Boton para generar PDF
         self.export_button = QPushButton("Generar PDF")
         layout.addWidget(self.export_button)
 
-        # Conectar botón con función export_action
+        # Conectar boton con funcion export_action
         self.export_button.clicked.connect(self.export_action)
 
     def export_action(self):
@@ -952,7 +952,7 @@ class ExportMenu(QDialog):
         #Obtenemos el nombre de usuario
         nombre_usuario = self.username_edit.text().strip()
         if not nombre_usuario:
-            # Podrías agregar un QMessageBox para alertar que el nombre es obligatorio
+            # Podrias agregar un QMessageBox para alertar que el nombre es obligatorio
             print("Debe ingresar un nombre de usuario")
             return
 
@@ -990,9 +990,9 @@ class ExportMenu(QDialog):
         exporter_R = ImageExporter(plot_item_R)
         exporter_R.export("./images/grafica_R.png")
 
-        # Llamar a la función crear_pdf con los datos necesarios
+        # Llamar a la funcion crear_pdf con los datos necesarios
         crear_pdf(nombre_usuario, self.main_window.angles_joints)
         print(f"PDF generado para usuario: {nombre_usuario}")
 
-        #Cerramos la ventana de exportación
+        #Cerramos la ventana de exportacion
         self.close()

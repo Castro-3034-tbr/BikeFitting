@@ -1,64 +1,64 @@
-# 🚴 Biomecánica de Ciclistas basada en Visión Artificial
+# 🚴 Biomecanica de Ciclistas basada en Vision Artificial
 
-Este proyecto tiene como objetivo analizar la **biomecánica de un ciclista** en tiempo real utilizando **visión artificial**, una **webcam** y un modelo de **detección de poses YOLOv11**. Se calcula una serie de ángulos articulares clave a partir de los puntos corporales detectados, con fines de análisis postural, optimización del rendimiento y prevención de lesiones.
+Este proyecto tiene como objetivo analizar la **biomecanica de un ciclista** en tiempo real utilizando **vision artificial**, una **webcam** y un modelo de **deteccion de poses YOLOv11**. Se calcula una serie de angulos articulares clave a partir de los puntos corporales detectados, con fines de analisis postural, optimizacion del rendimiento y prevencion de lesiones.
 
 
 ## 📌 Objetivo
 
 Desarrollar una herramienta capaz de capturar y analizar los movimientos clave de un ciclista durante el pedaleo para:
 
-- Evaluar la postura y simetría corporal.
-- Medir ángulos articulares relevantes en miembros superiores e inferiores.
+- Evaluar la postura y simetria corporal.
+- Medir angulos articulares relevantes en miembros superiores e inferiores.
 - Identificar posibles desalineaciones o sobrecargas.
-- Proporcionar feedback visual y cuantitativo sobre la técnica de pedaleo.
+- Proporcionar feedback visual y cuantitativo sobre la tecnica de pedaleo.
 
 
 ## 📖 Tabla de Contenidos
-- [🚴 Biomecánica de Ciclistas basada en Visión Artificial](#-biomecánica-de-ciclistas-basada-en-visión-artificial)
+- [🚴 Biomecanica de Ciclistas basada en Vision Artificial](#-biomecanica-de-ciclistas-basada-en-vision-artificial)
   - [📌 Objetivo](#-objetivo)
   - [📖 Tabla de Contenidos](#-tabla-de-contenidos)
-  - [🧰 Tecnologías utilizadas](#-tecnologías-utilizadas)
+  - [🧰 Tecnologias utilizadas](#-tecnologias-utilizadas)
   - [📦 Estructura de Carpetas](#-estructura-de-carpetas)
   - [⚙️ Requisitos](#️-requisitos)
   - [📥​ Instalacion](#-instalacion)
-  - [▶️​ Ejecución](#️-ejecución)
-  - [🧠 Explicación del Código](#-explicación-del-código)
+  - [▶️​ Ejecucion](#️-ejecucion)
+  - [🧠 Explicacion del Codigo](#-explicacion-del-codigo)
   - [📊 Resultados Actuales](#-resultados-actuales)
   - [Interfaz Grafica](#interfaz-grafica)
     - [1. Ventana Principal](#1-ventana-principal)
-      - [1. Diseño de interfaz](#1-diseño-de-interfaz)
+      - [1. Diseno de interfaz](#1-diseno-de-interfaz)
       - [Vistas](#vistas)
-    - [2. Página de Análisis](#2-página-de-análisis)
-    - [3. Página de Exportación (Generación de PDF)](#3-página-de-exportación-generación-de-pdf)
-    - [4. Página de Configuración de cámaras](#4-página-de-configuración-de-cámaras)
+    - [2. Pagina de Analisis](#2-pagina-de-analisis)
+    - [3. Pagina de Exportacion (Generacion de PDF)](#3-pagina-de-exportacion-generacion-de-pdf)
+    - [4. Pagina de Configuracion de camaras](#4-pagina-de-configuracion-de-camaras)
   - [📩 Contacto](#-contacto)
 
-## 🧰 Tecnologías utilizadas
+## 🧰 Tecnologias utilizadas
 
 - **Python 3.X**: Lenguaje principal.
-- **OpenCV**: Procesamiento y visualización de vídeo.
-- **Ultralytics YOLOv11**: Modelo de detección de poses.
-- **NumPy**: Cálculos numéricos y vectores.
-- **math**: Cálculo de ángulos en coordenadas polares.
+- **OpenCV**: Procesamiento y visualizacion de video.
+- **Ultralytics YOLOv11**: Modelo de deteccion de poses.
+- **NumPy**: Calculos numericos y vectores.
+- **math**: Calculo de angulos en coordenadas polares.
 - **Ultralytics SDK**: Para entrenamiento y pruebas.
 
 ## 📦 Estructura de Carpetas
 ```
 Biomecanica/
 ├── pdf/                    # Carpeta donde se almacenan los documentos PDF generados
-├── .images/                # Carpeta donde se almacenan las imágenes generadas
-├── .images_readme/         # Carpeta donde se almacenan las imágenes para el README
+├── .images/                # Carpeta donde se almacenan las imagenes generadas
+├── .images_readme/         # Carpeta donde se almacenan las imagenes para el README
 │   ├── ImagenCofCam.jpg
 │   └── logo.png
 ├── models/                # Carpeta que contiene el modelo YOLOv11
 ├── test/                  # Carpeta para pruebas
-├── data/                  # Funciones utilitarias para el análisis
-├── GUI.py                  # Interfaz gráfica de usuario
+├── data/                  # Funciones utilitarias para el analisis
+├── GUI.py                  # Interfaz grafica de usuario
 ├── ExportPDF.py            # Funciones para exportar a PDF
-├── main.py                # Archivo principal que ejecuta el análisis
+├── main.py                # Archivo principal que ejecuta el analisis
 ├── train.py               # Script para entrenar el modelo YOLOv11
 ├── requirements.txt       # Archivo de dependencias del proyecto
-└── README.md               # Documentación del proyecto
+└── README.md               # Documentacion del proyecto
 ```
 
 ## ⚙️ Requisitos
@@ -85,70 +85,70 @@ pip install -r requirements.txt
    ```
 2. Coloca el modelo entrenado YOLOv11 en models/best_Pose.pt.
 
-   📌 Puedes entrenar el modelo tú mismo siguiendo los pasos de la siguiente sección o solicitar el modelo entrenado.
+   📌 Puedes entrenar el modelo tu mismo siguiendo los pasos de la siguiente seccion o solicitar el modelo entrenado.
 
 
 
-## ▶️​ Ejecución
-Para analizar una imagen o un vídeo, ejecuta el siguiente comando:
+## ▶️​ Ejecucion
+Para analizar una imagen o un video, ejecuta el siguiente comando:
 ```bash
 python main.py
 ```
 
-## 🧠 Explicación del Código
-`main.py` – Análisis biomecánico a partir de vídeo o imagen
+## 🧠 Explicacion del Codigo
+`main.py` – Analisis biomecanico a partir de video o imagen
 
-Este script es el núcleo funcional del sistema. Se encarga de:
+Este script es el nucleo funcional del sistema. Se encarga de:
 1. **Cargar el modelo YOLOv11 Pose** desde `models/best_Pose.pt`.
-2. **Leer el archivo de entrada** (imagen o vídeo) especificado en `input_file`.
+2. **Leer el archivo de entrada** (imagen o video) especificado en `input_file`.
 3. **Detectar keypoints** usando el modelo YOLOv11.
-4. **Calcular ángulos articulares** entre los puntos relevantes del cuerpo (rodillas, cadera, brazos, cabeza).
-5. **Visualizar los ángulos** en la imagen/vídeo, dibujando líneas y arcos con OpenCV.
+4. **Calcular angulos articulares** entre los puntos relevantes del cuerpo (rodillas, cadera, brazos, cabeza).
+5. **Visualizar los angulos** en la imagen/video, dibujando lineas y arcos con OpenCV.
 6. **Guardar los resultados** en un nuevo archivo de salida (`output_pose.jpg` o `output_pose_video.avi`).
 
 Componentes principales:
-- `CalculeAngles()`: calcula ángulos entre tres puntos usando trigonometría.
-- `Draw()`: dibuja los puntos, líneas y arcos que representan los ángulos en pantalla.
-- `AnalizarFrame()`: gestiona el análisis completo de un frame (detección + dibujo).
-- `DrawAngles()`: renderiza los ángulos calculados en una zona visible del frame.
+- `CalculeAngles()`: calcula angulos entre tres puntos usando trigonometria.
+- `Draw()`: dibuja los puntos, lineas y arcos que representan los angulos en pantalla.
+- `AnalizarFrame()`: gestiona el analisis completo de un frame (deteccion + dibujo).
+- `DrawAngles()`: renderiza los angulos calculados en una zona visible del frame.
 
-Soporte para modo imagen y modo vídeo, con generación de salida para ambos.
+Soporte para modo imagen y modo video, con generacion de salida para ambos.
 
 `train_model.py` – Entrenamiento del modelo YOLOv11 Pose
-Este script permite entrenar un modelo personalizado de detección de poses con YOLOv11.
+Este script permite entrenar un modelo personalizado de deteccion de poses con YOLOv11.
 
 **Flujo del entrenamiento:**
 1. **Carga del modelo base** (`yolo11n-pose.pt`) desde la carpeta `models/`.
-2. **Lectura del archivo de configuración** data.yaml, que contiene:
-   - Rutas a imágenes de entrenamiento y validación.
+2. **Lectura del archivo de configuracion** data.yaml, que contiene:
+   - Rutas a imagenes de entrenamiento y validacion.
    - Clases y formato del dataset (en este caso, keypoints).
 
-3. **Ejecución del proceso de entrenamiento** con los siguientes parámetros:
-   - epochs: número total de épocas (por defecto 100).
-   - imgsz: resolución de entrada (640).
-   - batch: tamaño del batch.
+3. **Ejecucion del proceso de entrenamiento** con los siguientes parametros:
+   - epochs: numero total de epocas (por defecto 100).
+   - imgsz: resolucion de entrada (640).
+   - batch: tamano del batch.
    - device: GPU utilizada.
    - save_period: frecuencia con la que se guarda un checkpoint del modelo.
 
-4. **Generación de los pesos entrenados** dentro de `./runs/train/yolo11n-pose/.`
+4. **Generacion de los pesos entrenados** dentro de `./runs/train/yolo11n-pose/.`
 
-Este archivo utiliza la API de Ultralytics, por lo que se requiere tener instalada la versión oficial del paquete ultralytics.
+Este archivo utiliza la API de Ultralytics, por lo que se requiere tener instalada la version oficial del paquete ultralytics.
 
 ## 📊 Resultados Actuales
-El sistema actual permite analizar biomecánicamente el pedaleo de un ciclista utilizando visión artificial con un modelo de pose basado en YOLOv11. Como se encuentra en una fase de prototipado los resultados no son de alta calidad. A continuación se detallan las funcionalidades implementadas:
+El sistema actual permite analizar biomecanicamente el pedaleo de un ciclista utilizando vision artificial con un modelo de pose basado en YOLOv11. Como se encuentra en una fase de prototipado los resultados no son de alta calidad. A continuacion se detallan las funcionalidades implementadas:
 
 ✅ Entrenamiento basico del modelo YOLOv11 Pose con un dataset de keypoints.
 
-✅ Detección de keypoints anatómicos en ciclistas (hombros, cadera, rodillas, tobillos, etc.) a partir de imágenes o vídeos previamente grabados.
+✅ Deteccion de keypoints anatomicos en ciclistas (hombros, cadera, rodillas, tobillos, etc.) a partir de imagenes o videos previamente grabados.
 
-✅ Visualización sobrepuesta de los puntos clave, conexiones esqueléticas y elementos geométricos auxiliares como líneas o elipses.
+✅ Visualizacion sobrepuesta de los puntos clave, conexiones esqueleticas y elementos geometricos auxiliares como lineas o elipses.
 
-✅ Cálculo automático de ángulos articulares (por ejemplo, ángulo rodilla-cadera-tobillo) con visualización directa sobre la imagen.
+✅ Calculo automatico de angulos articulares (por ejemplo, angulo rodilla-cadera-tobillo) con visualizacion directa sobre la imagen.
 
-✅ Representación gráfica del ángulo en pantalla y exportación en formato visual del frame con anotaciones biomecánicas.
+✅ Representacion grafica del angulo en pantalla y exportacion en formato visual del frame con anotaciones biomecanicas.
 
 
-En resumen, se ha establecido un sistema base sólido y funcional, sobre el cual se construirá un conjunto de herramientas de análisis avanzado en las siguientes etapas del proyecto.
+En resumen, se ha establecido un sistema base solido y funcional, sobre el cual se construira un conjunto de herramientas de analisis avanzado en las siguientes etapas del proyecto.
 
 ![Resultados](./ImagesReadme/ResultadoProto.jpg)
 
@@ -156,66 +156,66 @@ En resumen, se ha establecido un sistema base sólido y funcional, sobre el cual
 
 ### 1. Ventana Principal
 
-La ventana principal actúa como el núcleo de la aplicación, proporcionando un acceso centralizado a todas las funciones del sistema de análisis biomecánico.
-Desde aquí, el usuario puede navegar a las diferentes secciones, configurar el entorno de análisis, iniciar sesiones de captura y generar informes PDF.
+La ventana principal actua como el nucleo de la aplicacion, proporcionando un acceso centralizado a todas las funciones del sistema de analisis biomecanico.
+Desde aqui, el usuario puede navegar a las diferentes secciones, configurar el entorno de analisis, iniciar sesiones de captura y generar informes PDF.
 ![Imagen de la Ventana Principal](.images_readme/principal_window.png)
 
-#### 1. Diseño de interfaz
+#### 1. Diseno de interfaz
 
-- Basada en PyQt5 con una disposición QVBoxLayout y QGridLayout para estructurar los componentes.
+- Basada en PyQt5 con una disposicion QVBoxLayout y QGridLayout para estructurar los componentes.
 
-- Barra de herramientas y menús superiores para acceso rápido a funciones críticas. Divididos en cuatro menús diferentes:
-  1. **Archivo**: Opciones para guardar y exportar datos mediante PDF y botón para salir.
-  2. **Visualización**: Cambia entre los diferentes modos de visualización de datos entre Vista 2D y 3D. Para el cambio de vista es necesario configurar dos cámaras, para ambos laterales.
-  3. **Configuración**: Ajustes de cámaras. Cuenta con la lista de camaras disponibles y la ejecucion del menu de configuracion de camaras.
+- Barra de herramientas y menus superiores para acceso rapido a funciones criticas. Divididos en cuatro menus diferentes:
+  1. **Archivo**: Opciones para guardar y exportar datos mediante PDF y boton para salir.
+  2. **Visualizacion**: Cambia entre los diferentes modos de visualizacion de datos entre Vista 2D y 3D. Para el cambio de vista es necesario configurar dos camaras, para ambos laterales.
+  3. **Configuracion**: Ajustes de camaras. Cuenta con la lista de camaras disponibles y la ejecucion del menu de configuracion de camaras.
   4. **Ayuda**: Acceso al repositorio de GitHub del proyecto y contacto.
 
 - La **vista principal** se muestra en la izquierda las vistas configurables y en la derecha se muestra una tabla los angulos. Se muestra el angulo local, el valor maximo del angulo y el valor minimo del angulo.
 
 #### Vistas
-- **Vista 2D**: Representación sobre las imagen capturada por la imagen, la informacion de los angulos
+- **Vista 2D**: Representacion sobre las imagen capturada por la imagen, la informacion de los angulos
 
 ![Imagen de la Vista 2D](.images_readme/vista_2d_window.png)
 
-- **Vista 3D**: Representación tridimensional de la posición actual. (Se encuentra en desarrollo debido a errores de visualización)
+- **Vista 3D**: Representacion tridimensional de la posicion actual. (Se encuentra en desarrollo debido a errores de visualizacion)
 ![Imagen de la Vista 3D](.images_readme/vista_3d_window.png)
 
-### 2. Página de Análisis
+### 2. Pagina de Analisis
 
-La página de análisis es el entorno principal para visualizar y procesar los datos biomecánicos.
+La pagina de analisis es el entorno principal para visualizar y procesar los datos biomecanicos.
 
-- **Visualización gráfica en tiempo real** mediante *PyQtGraph*.
+- **Visualizacion grafica en tiempo real** mediante *PyQtGraph*.
 - **Secciones divididas**:  
-  - Gráficas comparativa de los angulos de cada articulacion respecto el rango de angulos optimo.
+  - Graficas comparativa de los angulos de cada articulacion respecto el rango de angulos optimo.
   - Trayectoria de los puntos clave de la rodilla y el tobillo.
 - Controles para **reiniciar** los datos actuales.
   
-![Imagen de la Página de Análisis](.images_readme/analisis_window.png)
+![Imagen de la Pagina de Analisis](.images_readme/analisis_window.png)
 
-### 3. Página de Exportación (Generación de PDF)
+### 3. Pagina de Exportacion (Generacion de PDF)
 
-En esta sección el usuario puede **generar un informe en formato PDF** con los resultados del análisis.
+En esta seccion el usuario puede **generar un informe en formato PDF** con los resultados del analisis.
 
-- Botón principal para **exportar resultados**.
-- Generación de documento PDF con:
+- Boton principal para **exportar resultados**.
+- Generacion de documento PDF con:
   - Tabla de angulos maximos y minimos
-  - Gráficas comparativa de los angulos de cada articulacion respecto el rango de angulos optimo.
+  - Graficas comparativa de los angulos de cada articulacion respecto el rango de angulos optimo.
   - Grafica de las trayectoria de los puntos clave del tobillo y de la rodilla
 
-- Flujo optimizado para que el usuario no necesite guardar las gráficas manualmente; estas se extraen directamente.
+- Flujo optimizado para que el usuario no necesite guardar las graficas manualmente; estas se extraen directamente.
 
-![Imagen de la Página de Exportación](.images_readme/export_window.png)
+![Imagen de la Pagina de Exportacion](.images_readme/export_window.png)
 
-### 4. Página de Configuración de cámaras
+### 4. Pagina de Configuracion de camaras
 
 Permite ajustar la posicion de las camaras respecto al sujeto:
 
-![Imagen de la Página de Configuración de Cámaras](.images_readme/config_cam_window.png)
+![Imagen de la Pagina de Configuracion de Camaras](.images_readme/config_cam_window.png)
 
 
 ## 📩 Contacto
 
-Para dudas, propuestas de colaboración o comentarios técnicos:
+Para dudas, propuestas de colaboracion o comentarios tecnicos:
 
 📧 [danielcastrogomezzz@gmail.com](mailto:danielcastrogomezzz@gmail.com)
 GitHub: [Castro-3034-tbr](https://github.com/Castro-3034-tbr)
