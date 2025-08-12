@@ -704,12 +704,10 @@ class ConfigCamWindow(QDialog):
     #Comprobamos que no esten vacios
         if (left_value != "Sin asignar" and left_value != "") or (right_value != "Sin asignar" and right_value != ""):
             #Si tenemos configuracion minima, habilitamos el boton de analisis
-            print("Configuración mínima de cámaras lista.")
             self.main_window.camaras_configuradas = True
         else:
-            print("Configuración mínima de cámaras no lista.")
             self.main_window.camaras_configuradas = False
-        print(self.main_window.camaras_configuradas)
+        
 #region: Analisis window
 class AnalisisWindow(QDialog):
     """Ventana de analisis de datos biomecanicos."""
@@ -814,11 +812,19 @@ class AnalisisWindow(QDialog):
         """
 
         #Reiniciamos los maximos y minimos de los angulos
-        #TODO:
+        for joint in self.main_window.angles_joints.keys():
+            self.main_window.angles_joints[joint][0] = 0
+            self.main_window.angles_joints[joint][1] = 0
+            self.main_window.angles_joints[joint][2] = 0
 
         #Reiniciamos las trayectorias
         self.main_window.valores_grafica_L = [[[],[]],[[],[]]]
         self.main_window.valores_grafica_R = [[[],[]],[[],[]]]
+
+        #Actualizamos todo
+        self.main_window.update_angles()
+        self.update_bars(forzar=True)  # Forzar actualización de barras
+        self.update_trayectorias()
 
     def update_trayectorias(self):
         """
