@@ -3,7 +3,7 @@ val: ./validation
 test: ./test
 
 # 9 puntos clave: x, y, visibilidad
-kpt_shape: [8, 3]
+kpt_shape: [9, 3]
 
 # No usamos flips horizontales para keypoints
 flip_idx: []
@@ -21,4 +21,5 @@ keypoints:
   5: hombro
   6: codo
   7: muñeca
-  8: cabeza
+  8: dedo
+  9: cabeza
