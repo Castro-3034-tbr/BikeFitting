@@ -210,3 +210,24 @@ __marimo__/
 .trunk/
 models/*
 !models/.gitkeep
+
+#Images and labels
+*.jpg
+*.jpeg
+*.gif
+*.txt
+
+#Model files
+*.pt
+
+# Model files
+
+*.cache
+runs/*
+!runs/.gitkeep
+test/*
+!test/.gitkeep
+models/*
+!models/.gitkeep
+pdf/*
+!pdf/.gitkeep

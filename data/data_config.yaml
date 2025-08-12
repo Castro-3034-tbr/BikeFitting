@@ -1,0 +1,24 @@
+train: ./train
+val: ./validation
+test: ./test
+
+# 9 puntos clave: x, y, visibilidad
+kpt_shape: [8, 3]
+
+# No usamos flips horizontales para keypoints
+flip_idx: []
+
+# Clases
+nc: 1
+names: ['person']
+
+# Documentación de keypoints (solo un lado)
+keypoints:
+  1: punta_pie
+  2: tobillo
+  3: rodilla
+  4: cadera
+  5: hombro
+  6: codo
+  7: muñeca
+  8: cabeza
