@@ -161,20 +161,20 @@ class BiomecanicaUI(QMainWindow):
             ])
 
         self.angles_joints = {
-            "Pelvis": [0, 0, 0],
-            "Cuello": [0, 0, 0],
-            "Cadera R": [0, 0, 0],
-            "Rodilla R": [0, 0, 0],
-            "Tobillo R": [0, 0, 0],
-            "Cadera L": [0, 0, 0],
-            "Rodilla L": [0, 0, 0],
-            "Tobillo L": [0, 0, 0],
-            "Hombro R": [0, 0, 0],
-            "Codo R": [0, 0, 0],
-            "Muneca R": [0, 0, 0],
-            "Hombro L": [0, 0, 0],
-            "Codo L": [0, 0, 0],
-            "Muneca L": [0, 0, 0],
+            "Pelvis": [0, 0, 360],
+            "Cuello": [0, 0, 360],
+            "Cadera R": [0, 0, 360],
+            "Rodilla R": [0, 0, 360],
+            "Tobillo R": [0, 0, 360],
+            "Cadera L": [0, 0, 360],
+            "Rodilla L": [0, 0, 360],
+            "Tobillo L": [0, 0, 360],
+            "Hombro R": [0, 0, 360],
+            "Codo R": [0, 0, 360],
+            "Muneca R": [0, 0, 360],
+            "Hombro L": [0, 0, 360],
+            "Codo L": [0, 0, 360],
+            "Muneca L": [0, 0, 360],
         }
 
             # Definir conexiones entre puntos (start_index, end_index, joint_index, link_index)
@@ -422,7 +422,9 @@ class BiomecanicaUI(QMainWindow):
 
             if actual > max_val:
                 self.angles_joints[joint][1] = actual
-            if actual < min_val or min_val == 0:
+
+            #Obtenemos el minimo que sea distinto a nan
+            if actual < min_val and not np.isnan(actual) and actual != 0:
                 self.angles_joints[joint][2] = actual
 
             self.table.setItem(row, 2, QTableWidgetItem(f"{self.angles_joints[joint][1]:.2f}"))
@@ -726,20 +728,20 @@ class AnalisisWindow(QDialog):
         main_vlayout.addLayout(self.grid_superior)
 
         self.optimal_ranges = [
-        ("Pelvis", [[0, 360], [0, 360]]),
+        ("Pelvis", [[50, 60], [60, 65]]),
         ("Cuello", [[0, 360], [0, 360]]),
-        ("Cadera R", [[0, 360], [0, 360]]),
-        ("Rodilla R", [[0, 360], [0, 360]]),
-        ("Tobillo R", [[0, 360], [0, 360]]),
-        ("Cadera L", [[0, 360], [0, 360]]),
-        ("Rodilla L", [[0, 360], [0, 360]]),
-        ("Tobillo L", [[0, 360], [0, 360]]),
-        ("Hombro R", [[0, 360], [0, 360]]),
-        ("Codo R", [[0, 360], [0, 360]]),
-        ("Muneca R", [[0, 360], [0, 360]]),
-        ("Hombro L", [[0, 360], [0, 360]]),
-        ("Codo L", [[0, 360], [0, 360]]),
-        ("Muneca L", [[0, 360], [0, 360]])
+        ("Cadera R", [[38, 48], [82, 92]]),
+        ("Rodilla R", [[27, 33], [107, 113]]),
+        ("Tobillo R", [[16, 24], [21, 29]]),
+        ("Cadera L", [[38, 48], [82, 92]]),
+        ("Rodilla L", [[27, 33], [107, 113]]),
+        ("Tobillo L", [[16, 2460], [21, 29]]),
+        ("Hombro R", [[75, 85], [90, 100]]),
+        ("Codo R", [[135, 145], [145, 155]]),
+        ("Muneca R", [[0, 10], [15, 25]]),
+        ("Hombro L", [[75, 360], [90, 100]]),
+        ("Codo L", [[135, 145], [145, 155]]),
+        ("Muneca L", [[0, 10], [0, 360]])
         ]
 
 
@@ -816,7 +818,7 @@ class AnalisisWindow(QDialog):
         for joint in self.main_window.angles_joints.keys():
             self.main_window.angles_joints[joint][0] = 0
             self.main_window.angles_joints[joint][1] = 0
-            self.main_window.angles_joints[joint][2] = 0
+            self.main_window.angles_joints[joint][2] = 360
 
         #Reiniciamos las trayectorias
         self.main_window.valores_grafica_L = [[[],[]],[[],[]]]
@@ -910,9 +912,9 @@ class AnalisisWindow(QDialog):
 
             #Obtenemos el nuevo valor de angulo
             if col == 0:  # Minimo
-                new_value = self.main_window.angles_joints[name][0] #TODO: Cambiar por 1 cuando este implementado
+                new_value = self.main_window.angles_joints[name][1] #TODO: Cambiar por 1 cuando este implementado
             else:  # Maximo
-                new_value = self.main_window.angles_joints[name][0] #TODO: Cambiar por 2 cuando este implementado
+                new_value = self.main_window.angles_joints[name][2] #TODO: Cambiar por 2 cuando este implementado
 
             line.set_xdata([new_value])
         self.fig.canvas.draw_idle()

@@ -74,7 +74,7 @@ def BuclePrincipal():
             vista = None
 
         if vista == "Derecha":
-            # Procesar la vista derecha
+            # Guardamos los angulos de cada articulacion
             MainWindow.angles_joints["Pelvis"][0] = angulos["Pelvis"]
             MainWindow.angles_joints["Cuello"][0] = angulos["Cuello"]
             MainWindow.angles_joints["Cadera R"][0] = angulos["Cadera"]
@@ -106,7 +106,7 @@ def BuclePrincipal():
             MainWindow.updateImagen(name, qimg)
 
 #Cargamos el modelo
-model = YOLO('./models/yolo11n-pose.pt')
+model = YOLO('./models/yolo11x-pose.pt')
 if not model:
     raise Exception("Error al cargar el modelo.")
 print("Modelo cargado correctamente.")

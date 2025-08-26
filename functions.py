@@ -170,15 +170,15 @@ def AnalizarFrame(img, model):
 
     #Obtenemos los puntos para cada articulacion TODO: Poner las id correctas de cada punto
     keypoint_dic = {
-        "puntapie": keypoints_list[0],
-        "tobillo": keypoints_list[1],
-        "rodilla": keypoints_list[2],
-        "cadera": keypoints_list[3],
-        "hombro": keypoints_list[4],
-        "codo": keypoints_list[5],
-        "muneca": keypoints_list[6],
-        "dedo": keypoints_list[6],
-        "cabeza": keypoints_list[7]
+        "puntapie": keypoints_list[16],
+        "tobillo": keypoints_list[16],
+        "rodilla": keypoints_list[14],
+        "cadera": keypoints_list[12],
+        "hombro": keypoints_list[6],
+        "codo": keypoints_list[8],
+        "muneca": keypoints_list[10],
+        "dedo": keypoints_list[10],
+        "cabeza": keypoints_list[4]
     }
 
     #TODO: Borrar puntos menos el de caderaX
